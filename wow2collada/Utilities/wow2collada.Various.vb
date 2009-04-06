@@ -223,6 +223,7 @@ Namespace wow2collada
             frm.NUM_TRIANGLES = _SKIN.Triangles.Length
             frm.NUM_POINTS = _SKIN.Triangles.Length * 3
 
+
             frm.m_VertexBuffer = New VertexBuffer(GetType(CustomVertex.PositionNormalColored), frm.NUM_POINTS, frm.m_Device, 0, CustomVertex.PositionNormalColored.Format, Pool.Default)
 
             ' Lock the vertex buffer. 
@@ -256,6 +257,65 @@ Namespace wow2collada
             Next
 
             frm.m_VertexBuffer.Unlock()
+        End Sub
+
+        Public Sub CreateVertexBufferTextured(ByRef frm As RenderForm, ByVal _MD20 As wow2collada.FileReaders.M2, ByVal _SKIN As wow2collada.FileReaders.SKIN)
+
+            'if the texture doesn't exist, then don't use it...
+            Dim TextureFileName As String = "d:\temp\mpq\" & _MD20.Textures(_SKIN.TextureUnits(0).Texture).Filename
+            If Not File.Exists(TextureFileName) Then
+                frm.m_Texture = Nothing
+                CreateVertexBuffer(frm, _MD20, _SKIN)
+            Else
+
+
+                frm.NUM_TRIANGLES = _SKIN.Triangles.Length
+                frm.NUM_POINTS = _SKIN.Triangles.Length * 3
+
+
+                frm.m_VertexBuffer = New VertexBuffer(GetType(CustomVertex.PositionNormalTextured), frm.NUM_POINTS, frm.m_Device, 0, CustomVertex.PositionNormalTextured.Format, Pool.Default)
+
+                ' Load the Texture (for now only the first texture and with no checks)
+                Dim ms As New System.IO.MemoryStream
+                ms = LoadBLP(TextureFileName)
+                frm.m_Texture = TextureLoader.FromStream(frm.m_Device, ms)
+                'frm.PictureBox1.Image = LoadBLP(frm, "d:\temp\mpq\" & _MD20.Textures(_SKIN.TextureUnits(0).Texture).Filename)
+
+                ' Lock the vertex buffer. 
+                ' Lock returns an array of PositionNormalColored objects.
+                Dim vertices As CustomVertex.PositionNormalTextured() = CType(frm.m_VertexBuffer.Lock(0, 0), CustomVertex.PositionNormalTextured())
+
+
+                For i As Integer = 0 To _SKIN.Triangles.Length - 1
+                    vertices(i * 3 + 0) = New CustomVertex.PositionNormalTextured(_MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Position.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Position.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Position.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Normal.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Normal.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).Normal.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).TextureCoords.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex1).TextureCoords.Y)
+                    vertices(i * 3 + 1) = New CustomVertex.PositionNormalTextured(_MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Position.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Position.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Position.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Normal.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Normal.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).Normal.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).TextureCoords.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex2).TextureCoords.Y)
+                    vertices(i * 3 + 2) = New CustomVertex.PositionNormalTextured(_MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Position.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Position.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Position.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Normal.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Normal.Z, _
+                                                                                 -_MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).Normal.Y, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).TextureCoords.X, _
+                                                                                 _MD20.Vertices(_SKIN.Triangles(i).VertexIndex3).TextureCoords.Y)
+
+                Next
+
+                frm.m_VertexBuffer.Unlock()
+            End If
         End Sub
 
         Public Sub CreateVertexBufferFromADT(ByRef frm As RenderForm, ByVal ADT As wow2collada.FileReaders.ADT)
@@ -298,8 +358,7 @@ Namespace wow2collada
             frm.m_VertexBuffer.Unlock()
         End Sub
 
-        Public Function LoadBLP(ByVal FileName As String) As Bitmap
-
+        Public Function LoadBLP(ByVal FileName As String) As Stream
             Dim br As New BinaryReader(File.OpenRead(FileName))
 
             If br.ReadChars(4) <> "BLP2" Then Return Nothing
@@ -324,13 +383,90 @@ Namespace wow2collada
                 Palette(i) = Color.FromArgb(br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte)
             Next
 
-            If (bType <> 1 Or bEnc <> 2 Or bAlphaDepth <> 8 Or bAlphaEnc <> 1) Then Return Nothing 'we don't support this yet...
+            br.BaseStream.Position = bOffsets(0) 'we only care about the first MIP and assume it is the most relevant one...
 
+            Dim BitmapFromBLP As Bitmap = New Bitmap(bWidth, bHeight, Imaging.PixelFormat.Format32bppArgb)
 
+            If (bType = 1 And bEnc = 2 And bAlphaDepth = 1) Then ' DXT1
+                For y As Integer = 0 To bWidth - 1 Step 4
+                    For x As Integer = 0 To bHeight - 1 Step 4
+                        Dim _RGBValues As UInt16() = New UInt16(1) {br.ReadUInt16, br.ReadUInt16}
+                        Dim _ColorLUT As UInt32 = br.ReadUInt32
 
-            Debug.Print("yeah")
+                        Dim ColorLUT As Byte(,) = New Byte(3, 3) {{(_ColorLUT >> 30 And 3), (_ColorLUT >> 28 And 3), (_ColorLUT >> 26 And 3), (_ColorLUT >> 24 And 3)}, _
+                                                                  {(_ColorLUT >> 22 And 3), (_ColorLUT >> 20 And 3), (_ColorLUT >> 18 And 3), (_ColorLUT >> 16 And 3)}, _
+                                                                  {(_ColorLUT >> 14 And 3), (_ColorLUT >> 12 And 3), (_ColorLUT >> 10 And 3), (_ColorLUT >> 8 And 3)}, _
+                                                                  {(_ColorLUT >> 6 And 3), (_ColorLUT >> 4 And 3), (_ColorLUT >> 2 And 3), (_ColorLUT And 3)}}
+                        Dim RGBValues As Color() = New Color(3) {}
+                        RGBValues(0) = Color.FromArgb(255, _RGBValues(0) >> 8 And 255, _RGBValues(0) >> 3 And 255, _RGBValues(0) << 3 And 255)
+                        RGBValues(1) = Color.FromArgb(255, _RGBValues(1) >> 8 And 255, _RGBValues(1) >> 3 And 255, _RGBValues(1) << 3 And 255)
 
-            Return New Bitmap(bWidth, bHeight, Imaging.PixelFormat.Format32bppArgb)
+                        If RGBValues(0).ToArgb > RGBValues(1).ToArgb Then
+                            RGBValues(2) = Color.FromArgb(255, 2 / 3 * RGBValues(0).R + 1 / 3 * RGBValues(1).R, 2 / 3 * RGBValues(0).G + 1 / 3 * RGBValues(1).G, 2 / 3 * RGBValues(0).B + 1 / 3 * RGBValues(1).B)
+                            RGBValues(3) = Color.FromArgb(255, 1 / 3 * RGBValues(0).R + 2 / 3 * RGBValues(1).R, 1 / 3 * RGBValues(0).G + 2 / 3 * RGBValues(1).G, 1 / 3 * RGBValues(0).B + 2 / 3 * RGBValues(1).B)
+                        Else
+                            RGBValues(2) = Color.FromArgb(255, 1 / 2 * RGBValues(0).R + 1 / 2 * RGBValues(1).R, 1 / 2 * RGBValues(0).G + 1 / 2 * RGBValues(1).G, 1 / 2 * RGBValues(0).B + 1 / 2 * RGBValues(1).B)
+                            RGBValues(3) = Color.FromArgb(0, 0, 0, 0)
+                        End If
+
+                        For y1 As Integer = 0 To 3
+                            For x1 As Integer = 0 To 3
+                                Dim ci As Integer = ColorLUT(3 - y1, 3 - x1)
+                                BitmapFromBLP.SetPixel(x + x1, y + y1, Color.FromArgb(RGBValues(ci).A, RGBValues(ci).R, RGBValues(ci).G, RGBValues(ci).B))
+                            Next
+                        Next
+
+                    Next
+                Next
+
+            ElseIf (bType = 1 And bEnc = 2 And bAlphaDepth = 8 And bAlphaEnc = 1) Then ' DXT3
+                For y As Integer = 0 To bWidth Step 4
+                    For x As Integer = 0 To bHeight Step 4
+                        Dim _AlphaMap As Byte() = New Byte(7) {br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte}
+                        Dim _RGBValues As UInt16() = New UInt16(1) {br.ReadUInt16, br.ReadUInt16}
+                        Dim _ColorLUT As UInt32 = br.ReadUInt32
+
+                        Dim ColorLUT As Byte(,) = New Byte(3, 3) {{(_ColorLUT >> 30 And 3), (_ColorLUT >> 28 And 3), (_ColorLUT >> 26 And 3), (_ColorLUT >> 24 And 3)}, _
+                                                                  {(_ColorLUT >> 22 And 3), (_ColorLUT >> 20 And 3), (_ColorLUT >> 18 And 3), (_ColorLUT >> 16 And 3)}, _
+                                                                  {(_ColorLUT >> 14 And 3), (_ColorLUT >> 12 And 3), (_ColorLUT >> 10 And 3), (_ColorLUT >> 8 And 3)}, _
+                                                                  {(_ColorLUT >> 6 And 3), (_ColorLUT >> 4 And 3), (_ColorLUT >> 2 And 3), (_ColorLUT And 3)}}
+                        'alpha calculation probably wrong...
+                        Dim AlphaMap As Byte(,) = New Byte(3, 3) {{_AlphaMap(0) >> 4 And 15, _AlphaMap(0) And 15, _AlphaMap(1) >> 4 And 15, _AlphaMap(1) And 15}, _
+                                                                  {_AlphaMap(2) >> 4 And 15, _AlphaMap(2) And 15, _AlphaMap(3) >> 4 And 15, _AlphaMap(3) And 15}, _
+                                                                  {_AlphaMap(4) >> 4 And 15, _AlphaMap(4) And 15, _AlphaMap(5) >> 4 And 15, _AlphaMap(5) And 15}, _
+                                                                  {_AlphaMap(6) >> 4 And 15, _AlphaMap(6) And 15, _AlphaMap(7) >> 4 And 15, _AlphaMap(7) And 15}}
+
+                        Dim RGBValues As Color() = New Color(3) {}
+                        RGBValues(0) = Color.FromArgb(0, _RGBValues(0) >> 8 And 255, _RGBValues(0) >> 3 And 255, _RGBValues(0) << 3 And 255)
+                        RGBValues(1) = Color.FromArgb(0, _RGBValues(1) >> 8 And 255, _RGBValues(1) >> 3 And 255, _RGBValues(1) << 3 And 255)
+
+                        If _RGBValues(0) > _RGBValues(1) Then
+                            RGBValues(2) = Color.FromArgb(0, 2 / 3 * RGBValues(0).R + 1 / 3 * RGBValues(1).R, 2 / 3 * RGBValues(0).G + 1 / 3 * RGBValues(1).G, 2 / 3 * RGBValues(0).B + 1 / 3 * RGBValues(1).B)
+                            RGBValues(3) = Color.FromArgb(0, 1 / 3 * RGBValues(0).R + 2 / 3 * RGBValues(1).R, 1 / 3 * RGBValues(0).G + 2 / 3 * RGBValues(1).G, 1 / 3 * RGBValues(0).B + 2 / 3 * RGBValues(1).B)
+                        Else
+                            Debug.Print("Weird Values found in file...")
+                        End If
+
+                        For y1 As Integer = 0 To 3
+                            For x1 As Integer = 0 To 3
+                                Dim ci As Integer = ColorLUT(3 - y1, 3 - x1)
+                                Dim al As Integer = AlphaMap(3 - y1, 3 - x1)
+                                BitmapFromBLP.SetPixel(x + x1, y + y1, Color.FromArgb(al, RGBValues(ci).R, RGBValues(ci).G, RGBValues(ci).B))
+                            Next
+                        Next
+
+                    Next
+                Next
+
+            Else
+                Return Nothing 'we don't support this yet...
+            End If
+
+            Dim iStream As New System.IO.MemoryStream
+            BitmapFromBLP.Save(iStream, Imaging.ImageFormat.Png)
+            iStream.Position = 0
+            Return iStream
+
         End Function
 
     End Class

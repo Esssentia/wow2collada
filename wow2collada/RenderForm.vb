@@ -7,6 +7,7 @@ Public Class RenderForm
 
     ' The material.
     Private m_Material As Material
+    Public m_Texture As Texture
 
     Private MouseIsDown As Boolean
     Private MousePosX As Integer
@@ -195,7 +196,12 @@ Public Class RenderForm
         m_Device.SetStreamSource(0, m_VertexBuffer, 0)
 
         ' Tell the device the format of the vertices.
-        m_Device.VertexFormat = CustomVertex.PositionNormalColored.Format
+        If m_Texture Is Nothing Then
+            m_Device.VertexFormat = CustomVertex.PositionNormalColored.Format
+        Else
+            m_Device.VertexFormat = CustomVertex.PositionNormalTextured.Format
+            m_Device.SetTexture(0, m_Texture)
+        End If
 
         ' Draw the primitives in the data stream.
         m_Device.DrawPrimitives(PrimitiveType.TriangleList, 0, NUM_TRIANGLES)
@@ -355,7 +361,8 @@ Public Class RenderForm
         'WMOROOT.Load(FileNameWMOROOT)
         'ADT.Load(FileNameADT)
 
-        hf.CreateVertexBuffer(Me, MD20, SKIN)
+        hf.CreateVertexBufferTextured(Me, MD20, SKIN) 'textured
+        'hf.CreateVertexBuffer(Me, MD20, SKIN) 'untextured
 
         ListBox1.Items.Add("M2 File: " & FileNameMD20)
         ListBox1.Items.Add("M2 Model: " & MD20.ModelName)

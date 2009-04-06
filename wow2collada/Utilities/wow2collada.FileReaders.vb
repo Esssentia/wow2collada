@@ -217,7 +217,7 @@ Namespace wow2collada.FileReaders
             For i As Integer = 0 To nTextures - 1
                 If Textures(i).Type = 0 Then
                     br.BaseStream.Position = Textures(i).ofsFilename
-                    Textures(i).Filename = br.ReadChars(Textures(i).lenFilename)
+                    Textures(i).Filename = br.ReadChars(Textures(i).lenFilename - 1) 'length includes trailing chr(0)
                 End If
             Next
 

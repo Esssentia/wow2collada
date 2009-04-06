@@ -35,9 +35,11 @@ Partial Class RenderForm
         Me.VerticesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
+        Me.PictureBox1 = New System.Windows.Forms.PictureBox
         CType(Me.pic3d, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'pic3d
@@ -57,7 +59,7 @@ Partial Class RenderForm
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.Location = New System.Drawing.Point(751, 27)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(498, 654)
+        Me.ListBox1.Size = New System.Drawing.Size(498, 407)
         Me.ListBox1.TabIndex = 9
         '
         'MenuStrip1
@@ -90,7 +92,7 @@ Partial Class RenderForm
         'QuitToolStripMenuItem
         '
         Me.QuitToolStripMenuItem.Name = "QuitToolStripMenuItem"
-        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(103, 22)
         Me.QuitToolStripMenuItem.Text = "Quit"
         '
         'EditToolStripMenuItem
@@ -110,7 +112,7 @@ Partial Class RenderForm
         '
         Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SolidToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.VerticesToolStripMenuItem})
         Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
-        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(112, 22)
         Me.DisplayToolStripMenuItem.Text = "Display"
         '
         'SolidToolStripMenuItem
@@ -118,19 +120,19 @@ Partial Class RenderForm
         Me.SolidToolStripMenuItem.Checked = True
         Me.SolidToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
         Me.SolidToolStripMenuItem.Name = "SolidToolStripMenuItem"
-        Me.SolidToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SolidToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.SolidToolStripMenuItem.Text = "Solid"
         '
         'WireframeToolStripMenuItem
         '
         Me.WireframeToolStripMenuItem.Name = "WireframeToolStripMenuItem"
-        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.WireframeToolStripMenuItem.Text = "Wireframe"
         '
         'VerticesToolStripMenuItem
         '
         Me.VerticesToolStripMenuItem.Name = "VerticesToolStripMenuItem"
-        Me.VerticesToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.VerticesToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.VerticesToolStripMenuItem.Text = "Vertices"
         '
         'StatusStrip1
@@ -149,11 +151,20 @@ Partial Class RenderForm
         Me.ToolStripStatusLabel1.Spring = True
         Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
+        'PictureBox1
+        '
+        Me.PictureBox1.Location = New System.Drawing.Point(751, 433)
+        Me.PictureBox1.Name = "PictureBox1"
+        Me.PictureBox1.Size = New System.Drawing.Size(498, 248)
+        Me.PictureBox1.TabIndex = 12
+        Me.PictureBox1.TabStop = False
+        '
         'RenderForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1249, 702)
+        Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.ListBox1)
         Me.Controls.Add(Me.pic3d)
@@ -168,6 +179,7 @@ Partial Class RenderForm
         Me.MenuStrip1.PerformLayout()
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -188,5 +200,6 @@ Partial Class RenderForm
     Friend WithEvents VerticesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents ToolStripStatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
+    Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
 
 End Class
