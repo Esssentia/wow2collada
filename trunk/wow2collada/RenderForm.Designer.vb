@@ -19,6 +19,7 @@ Partial Class RenderForm
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim TreeNode3 As System.Windows.Forms.TreeNode = New System.Windows.Forms.TreeNode("ROOT")
         Me.pic3d = New System.Windows.Forms.PictureBox
         Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog
         Me.ListBox1 = New System.Windows.Forms.ListBox
@@ -39,6 +40,8 @@ Partial Class RenderForm
         Me.ToolStripStatusLabel2 = New System.Windows.Forms.ToolStripStatusLabel
         Me.TextureBox1 = New System.Windows.Forms.PictureBox
         Me.Button1 = New System.Windows.Forms.Button
+        Me.TreeView1 = New System.Windows.Forms.TreeView
+        Me.ToolStripProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
         CType(Me.pic3d, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
@@ -47,9 +50,9 @@ Partial Class RenderForm
         '
         'pic3d
         '
-        Me.pic3d.Location = New System.Drawing.Point(0, 27)
+        Me.pic3d.Location = New System.Drawing.Point(319, 26)
         Me.pic3d.Name = "pic3d"
-        Me.pic3d.Size = New System.Drawing.Size(752, 654)
+        Me.pic3d.Size = New System.Drawing.Size(622, 654)
         Me.pic3d.TabIndex = 1
         Me.pic3d.TabStop = False
         '
@@ -60,7 +63,7 @@ Partial Class RenderForm
         'ListBox1
         '
         Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(751, 27)
+        Me.ListBox1.Location = New System.Drawing.Point(942, 27)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.Size = New System.Drawing.Size(498, 407)
         Me.ListBox1.TabIndex = 9
@@ -70,7 +73,7 @@ Partial Class RenderForm
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ViewToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(1249, 24)
+        Me.MenuStrip1.Size = New System.Drawing.Size(1440, 24)
         Me.MenuStrip1.TabIndex = 10
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -146,10 +149,10 @@ Partial Class RenderForm
         '
         'StatusStrip1
         '
-        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel1, Me.ToolStripStatusLabel2})
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripProgressBar1, Me.ToolStripStatusLabel1, Me.ToolStripStatusLabel2})
         Me.StatusStrip1.Location = New System.Drawing.Point(0, 680)
         Me.StatusStrip1.Name = "StatusStrip1"
-        Me.StatusStrip1.Size = New System.Drawing.Size(1249, 22)
+        Me.StatusStrip1.Size = New System.Drawing.Size(1440, 22)
         Me.StatusStrip1.TabIndex = 11
         Me.StatusStrip1.Text = "StatusStrip1"
         '
@@ -157,7 +160,7 @@ Partial Class RenderForm
         '
         Me.ToolStripStatusLabel1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
         Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(734, 17)
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(925, 17)
         Me.ToolStripStatusLabel1.Spring = True
         '
         'ToolStripStatusLabel2
@@ -169,7 +172,7 @@ Partial Class RenderForm
         '
         'TextureBox1
         '
-        Me.TextureBox1.Location = New System.Drawing.Point(751, 434)
+        Me.TextureBox1.Location = New System.Drawing.Point(942, 434)
         Me.TextureBox1.Name = "TextureBox1"
         Me.TextureBox1.Size = New System.Drawing.Size(262, 247)
         Me.TextureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -178,18 +181,36 @@ Partial Class RenderForm
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(1019, 654)
+        Me.Button1.Location = New System.Drawing.Point(1338, 654)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(90, 23)
         Me.Button1.TabIndex = 14
         Me.Button1.Text = "<< Texture >>"
         Me.Button1.UseVisualStyleBackColor = True
         '
+        'TreeView1
+        '
+        Me.TreeView1.Location = New System.Drawing.Point(0, 27)
+        Me.TreeView1.Name = "TreeView1"
+        TreeNode3.Name = "ROOT"
+        TreeNode3.Text = "ROOT"
+        Me.TreeView1.Nodes.AddRange(New System.Windows.Forms.TreeNode() {TreeNode3})
+        Me.TreeView1.Size = New System.Drawing.Size(319, 653)
+        Me.TreeView1.TabIndex = 15
+        '
+        'ToolStripProgressBar1
+        '
+        Me.ToolStripProgressBar1.AutoSize = False
+        Me.ToolStripProgressBar1.Name = "ToolStripProgressBar1"
+        Me.ToolStripProgressBar1.Size = New System.Drawing.Size(315, 16)
+        Me.ToolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous
+        '
         'RenderForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1249, 702)
+        Me.ClientSize = New System.Drawing.Size(1440, 702)
+        Me.Controls.Add(Me.TreeView1)
         Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.TextureBox1)
         Me.Controls.Add(Me.StatusStrip1)
@@ -231,5 +252,7 @@ Partial Class RenderForm
     Friend WithEvents TextureBox1 As System.Windows.Forms.PictureBox
     Friend WithEvents Button1 As System.Windows.Forms.Button
     Friend WithEvents ToolStripStatusLabel2 As System.Windows.Forms.ToolStripStatusLabel
+    Friend WithEvents TreeView1 As System.Windows.Forms.TreeView
+    Friend WithEvents ToolStripProgressBar1 As System.Windows.Forms.ToolStripProgressBar
 
 End Class
