@@ -1,19 +1,27 @@
 Namespace wow2collada
 
     Module Main
-        Dim frm As RenderForm
+        Public frm As RenderForm
+        Public render As render3d
+        Public hf As HelperFunctions
+        Public myDBC As FileReaders.DBC
 
         Public Sub Main()
             frm = New RenderForm()
+            render = New render3d(frm.pic3d)
+            hf = New HelperFunctions
+
+            myDBC = New FileReaders.DBC
+            myDBC.LoadCreatureModelData("D:\temp\mpq\DBFilesClient\CreatureModelData.dbc")
+            myDBC.LoadCreatureDisplayInfo("D:\temp\mpq\DBFilesClient\CreatureDisplayInfo.dbc")
 
             ' Initialize Direct3D.
-            If frm.InitializeGraphics() Then
+            If render.InitializeGraphics() Then
                 frm.Show()
 
-                ' While the form is valid,
-                ' render the scene and process messages.
+                ' While the form is valid, render the scene and process messages.
                 Do While frm.Created
-                    frm.Render()
+                    render.Render()
                     Application.DoEvents()
                 Loop
             End If

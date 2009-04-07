@@ -33,13 +33,16 @@ Partial Class RenderForm
         Me.SolidToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.WireframeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.VerticesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ResetViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox
+        Me.ToolStripStatusLabel2 = New System.Windows.Forms.ToolStripStatusLabel
+        Me.TextureBox1 = New System.Windows.Forms.PictureBox
+        Me.Button1 = New System.Windows.Forms.Button
         CType(Me.pic3d, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.TextureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'pic3d
@@ -103,7 +106,7 @@ Partial Class RenderForm
         '
         'ViewToolStripMenuItem
         '
-        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DisplayToolStripMenuItem})
+        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DisplayToolStripMenuItem, Me.ResetViewToolStripMenuItem})
         Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
         Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(44, 20)
         Me.ViewToolStripMenuItem.Text = "View"
@@ -112,7 +115,7 @@ Partial Class RenderForm
         '
         Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SolidToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.VerticesToolStripMenuItem})
         Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
-        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(112, 22)
+        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.DisplayToolStripMenuItem.Text = "Display"
         '
         'SolidToolStripMenuItem
@@ -135,9 +138,15 @@ Partial Class RenderForm
         Me.VerticesToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.VerticesToolStripMenuItem.Text = "Vertices"
         '
+        'ResetViewToolStripMenuItem
+        '
+        Me.ResetViewToolStripMenuItem.Name = "ResetViewToolStripMenuItem"
+        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
+        Me.ResetViewToolStripMenuItem.Text = "Reset View"
+        '
         'StatusStrip1
         '
-        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel1})
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel1, Me.ToolStripStatusLabel2})
         Me.StatusStrip1.Location = New System.Drawing.Point(0, 680)
         Me.StatusStrip1.Name = "StatusStrip1"
         Me.StatusStrip1.Size = New System.Drawing.Size(1249, 22)
@@ -146,25 +155,43 @@ Partial Class RenderForm
         '
         'ToolStripStatusLabel1
         '
+        Me.ToolStripStatusLabel1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
         Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(1234, 17)
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(734, 17)
         Me.ToolStripStatusLabel1.Spring = True
-        Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
-        'PictureBox1
+        'ToolStripStatusLabel2
         '
-        Me.PictureBox1.Location = New System.Drawing.Point(751, 433)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(498, 248)
-        Me.PictureBox1.TabIndex = 12
-        Me.PictureBox1.TabStop = False
+        Me.ToolStripStatusLabel2.AutoSize = False
+        Me.ToolStripStatusLabel2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.ToolStripStatusLabel2.Name = "ToolStripStatusLabel2"
+        Me.ToolStripStatusLabel2.Size = New System.Drawing.Size(500, 17)
+        '
+        'TextureBox1
+        '
+        Me.TextureBox1.Location = New System.Drawing.Point(751, 434)
+        Me.TextureBox1.Name = "TextureBox1"
+        Me.TextureBox1.Size = New System.Drawing.Size(262, 247)
+        Me.TextureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+        Me.TextureBox1.TabIndex = 13
+        Me.TextureBox1.TabStop = False
+        '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(1019, 654)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(90, 23)
+        Me.Button1.TabIndex = 14
+        Me.Button1.Text = "<< Texture >>"
+        Me.Button1.UseVisualStyleBackColor = True
         '
         'RenderForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1249, 702)
-        Me.Controls.Add(Me.PictureBox1)
+        Me.Controls.Add(Me.Button1)
+        Me.Controls.Add(Me.TextureBox1)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.ListBox1)
         Me.Controls.Add(Me.pic3d)
@@ -179,7 +206,7 @@ Partial Class RenderForm
         Me.MenuStrip1.PerformLayout()
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.TextureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -200,6 +227,9 @@ Partial Class RenderForm
     Friend WithEvents VerticesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents ToolStripStatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
-    Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
+    Friend WithEvents ResetViewToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents TextureBox1 As System.Windows.Forms.PictureBox
+    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents ToolStripStatusLabel2 As System.Windows.Forms.ToolStripStatusLabel
 
 End Class

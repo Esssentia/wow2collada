@@ -8,7 +8,7 @@
     <ProjectGuid>{9FC20B5D-537D-4ACC-8494-0FF0B486781F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <StartupObject>Sub Main</StartupObject>
-    <RootNamespace>WMOtoCollada</RootNamespace>
+    <RootNamespace>wow2collada</RootNamespace>
     <AssemblyName>WMOtoCollada</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>WindowsFormsWithCustomSubMain</MyType>
@@ -80,6 +80,12 @@
     <Import Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ImageViewer.Designer.vb">
+      <DependentUpon>ImageViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ImageViewer.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="RenderForm.Designer.vb">
       <DependentUpon>RenderForm.vb</DependentUpon>
     </Compile>
@@ -87,6 +93,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SubMain.vb" />
+    <Compile Include="Utilities\wow2collada.Direct3D.vb" />
     <Compile Include="Utilities\wow2collada.Various.vb" />
     <Compile Include="Utilities\wow2collada.FileReaders.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -106,6 +113,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ImageViewer.resx">
+      <DependentUpon>ImageViewer.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
