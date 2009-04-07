@@ -10,13 +10,6 @@ Public Class RenderForm
     Private ModelOldY As Single
     Private ModelOldZ As Single
 
-    Public Structure TextureListItem
-        Dim Img As Bitmap
-        Dim Path As String
-    End Structure
-
-    Public TextureImages As New System.Collections.Generic.List(Of TextureListItem)
-
     Private Sub OpenFileDialog1_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles OpenFileDialog1.FileOk
         ToolStripStatusLabel1.Text = OpenFileDialog1.FileName
         LoadModel()
@@ -94,6 +87,8 @@ Public Class RenderForm
         For i As Integer = 0 To Retval.Count - 1
             ListBox1.Items.Add(Retval(i))
         Next
+
+        Button1.PerformClick()
     End Sub
 
     Private Sub ResetViewToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ResetViewToolStripMenuItem.Click
@@ -103,11 +98,11 @@ Public Class RenderForm
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
         Static pos As Integer = -1
 
-        If TextureImages.Count > 0 Then
+        If wow2collada.render.m_Textures.Count > 0 Then
             pos += 1
-            If pos >= TextureImages.Count Then pos = 0
-            TextureBox1.Image = TextureImages.Item(pos).Img
-            ToolStripStatusLabel2.Text = TextureImages.Item(pos).Path
+            If pos >= wow2collada.render.m_Textures.Count Then pos = 0
+            TextureBox1.Image = wow2collada.render.m_Textures(pos).TexGra
+            ToolStripStatusLabel2.Text = wow2collada.render.m_Textures(pos).FileName
         End If
     End Sub
 
@@ -117,4 +112,5 @@ Public Class RenderForm
         a.ToolStripStatusLabel1.Text = ToolStripStatusLabel2.Text
         a.Show()
     End Sub
+
 End Class
