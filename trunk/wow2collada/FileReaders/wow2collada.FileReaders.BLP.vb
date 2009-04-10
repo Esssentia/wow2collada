@@ -169,7 +169,7 @@ Namespace wow2collada.FileReaders
                             RGBValues(2) = Color.FromArgb(0, 2 / 3 * RGBValues(0).R + 1 / 3 * RGBValues(1).R, 2 / 3 * RGBValues(0).G + 1 / 3 * RGBValues(1).G, 2 / 3 * RGBValues(0).B + 1 / 3 * RGBValues(1).B)
                             RGBValues(3) = Color.FromArgb(0, 1 / 3 * RGBValues(0).R + 2 / 3 * RGBValues(1).R, 1 / 3 * RGBValues(0).G + 2 / 3 * RGBValues(1).G, 1 / 3 * RGBValues(0).B + 2 / 3 * RGBValues(1).B)
                         Else
-                            Debug.Print("Weird Values found in file...")
+                            Debug.Print("Weird Values found in file: " & FileName)
                         End If
 
                         Dim AlphaValues As Byte() = New Byte(7) {}

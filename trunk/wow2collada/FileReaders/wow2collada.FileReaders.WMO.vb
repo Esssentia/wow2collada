@@ -30,7 +30,6 @@ Namespace wow2collada.FileReaders
             Public Materials As Byte()
         End Structure
 
-
         Public nMaterials As UInt32
         Public nGroups As UInt32
         Public nPortals As UInt32
@@ -42,10 +41,10 @@ Namespace wow2collada.FileReaders
         Public WMO_ID As UInt32
         Public BoundingBoxA As Vector3
         Public BoundingBoxB As Vector3
-        Public Textures() As String
-        Public DoodadSets() As sDoodadSet
-        Public Doodads() As sDoodad
-        Public Groups() As String
+        Public DoodadSets As sDoodadSet()
+        Public Doodads As sDoodad()
+        Public Groups As String()
+        Public Textures As String()
         Public SubSets As sSubSet()
 
         Public Function Load(ByVal FileName As String) As Boolean
@@ -59,8 +58,12 @@ Namespace wow2collada.FileReaders
             Dim ChunkLen As UInt32
             Dim Version As UInt32
             Dim FilePosition As UInt32 = 0
-            Dim MODN() As Byte
+            Dim MODN() As Byte = New Byte() {} 'pointless, but I don't want warnings :)
+            Dim MOTX() As Byte = New Byte() {} 'pointless, but I don't want warnings :)
             Dim Done As Boolean = False
+
+            frm.StatusLabel1.Text = "Loading WMO Basefile..."
+            Application.DoEvents()
 
             While br.BaseStream.Position < br.BaseStream.Length And Not Done
                 ChunkId = br.ReadChars(4)
@@ -84,14 +87,21 @@ Namespace wow2collada.FileReaders
                         BoundingBoxB = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                         Dim Unknown As UInt32 = br.ReadUInt32
 
-                        'ReDim Materials(nMaterials)
-                        ReDim DoodadSets(nSets)
-                        ReDim Doodads(nDoodads)
+                        ReDim Textures(nMaterials - 1)
+                        ReDim DoodadSets(nSets - 1)
+                        ReDim Doodads(nDoodads - 1)
 
                     Case "MOTX" ' Texture Files (List of zero-terminated strings)
-                        Textures = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
-                    Case "MOMT"
-                        '??
+                        'We get them through Materials instead of directly...
+                        'Textures = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
+                        MOTX = br.ReadBytes(ChunkLen)
+                    Case "MOMT" ' Materials
+                        For i As Integer = 0 To nMaterials - 1
+                            br.BaseStream.Position = br.BaseStream.Position + 12
+                            Dim StartID As UInt32 = br.ReadUInt32 'Texture String Start
+                            br.BaseStream.Position = br.BaseStream.Position + 48
+                            Textures(i) = myHF.GetZeroDelimitedString(MOTX, StartID)
+                        Next
                     Case "MOGN" 'Group Names (lets get them just in case...
                         Groups = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
 
@@ -138,7 +148,11 @@ Namespace wow2collada.FileReaders
                     'MsgBox("Argh...")
                 End If
                 br.BaseStream.Position = FilePosition
+                Application.DoEvents()
             End While
+
+            frm.StatusLabel1.Text = "Loading WMO Subfile(s)..."
+            Application.DoEvents()
 
             ' now try to get the WMO Subfiles... (same directory, same name but with _xxx.wmo instead of just .wmo)
             Dim n As Integer = 0
@@ -235,6 +249,7 @@ Namespace wow2collada.FileReaders
 
                 n += 1
                 SubFile = FileName.Substring(0, FileName.LastIndexOf(".")) & "_" & n.ToString.PadLeft(3, "0") & ".wmo"
+                Application.DoEvents()
             End While
             Return True
         End Function
