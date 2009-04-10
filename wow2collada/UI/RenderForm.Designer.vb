@@ -23,6 +23,7 @@ Partial Class RenderForm
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator
+        Me.SaveAsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.QuitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
@@ -32,8 +33,8 @@ Partial Class RenderForm
         Me.VerticesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ResetViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
-        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
-        Me.ToolStripStatusLabel2 = New System.Windows.Forms.ToolStripStatusLabel
+        Me.StatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
+        Me.ProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer
         Me.FileList = New System.Windows.Forms.TreeView
@@ -50,6 +51,7 @@ Partial Class RenderForm
         Me.FileListPopupSaveAs = New System.Windows.Forms.ToolStripMenuItem
         Me.FileListPopupOpenInHexViewer = New System.Windows.Forms.ToolStripMenuItem
         Me.FileListSaveFile = New System.Windows.Forms.SaveFileDialog
+        Me.SaveModelDialog = New System.Windows.Forms.SaveFileDialog
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
         Me.SplitContainer2.Panel1.SuspendLayout()
@@ -79,7 +81,7 @@ Partial Class RenderForm
         '
         'FileToolStripMenuItem
         '
-        Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripSeparator1, Me.QuitToolStripMenuItem})
+        Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripSeparator1, Me.SaveAsToolStripMenuItem, Me.QuitToolStripMenuItem})
         Me.FileToolStripMenuItem.Name = "FileToolStripMenuItem"
         Me.FileToolStripMenuItem.Size = New System.Drawing.Size(37, 20)
         Me.FileToolStripMenuItem.Text = "File"
@@ -87,12 +89,18 @@ Partial Class RenderForm
         'ToolStripSeparator1
         '
         Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
-        Me.ToolStripSeparator1.Size = New System.Drawing.Size(94, 6)
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(149, 6)
+        '
+        'SaveAsToolStripMenuItem
+        '
+        Me.SaveAsToolStripMenuItem.Name = "SaveAsToolStripMenuItem"
+        Me.SaveAsToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.SaveAsToolStripMenuItem.Text = "Save 3D as ..."
         '
         'QuitToolStripMenuItem
         '
         Me.QuitToolStripMenuItem.Name = "QuitToolStripMenuItem"
-        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(97, 22)
+        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.QuitToolStripMenuItem.Text = "Quit"
         '
         'EditToolStripMenuItem
@@ -143,26 +151,27 @@ Partial Class RenderForm
         '
         'StatusStrip1
         '
-        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel1, Me.ToolStripStatusLabel2})
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.StatusLabel1, Me.ProgressBar1})
         Me.StatusStrip1.Location = New System.Drawing.Point(0, 633)
         Me.StatusStrip1.Name = "StatusStrip1"
         Me.StatusStrip1.Size = New System.Drawing.Size(1162, 22)
         Me.StatusStrip1.TabIndex = 11
         Me.StatusStrip1.Text = "StatusStrip1"
         '
-        'ToolStripStatusLabel1
+        'StatusLabel1
         '
-        Me.ToolStripStatusLabel1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
-        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(647, 17)
-        Me.ToolStripStatusLabel1.Spring = True
+        Me.StatusLabel1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.StatusLabel1.Name = "StatusLabel1"
+        Me.StatusLabel1.Size = New System.Drawing.Size(845, 17)
+        Me.StatusLabel1.Spring = True
+        Me.StatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
-        'ToolStripStatusLabel2
+        'ProgressBar1
         '
-        Me.ToolStripStatusLabel2.AutoSize = False
-        Me.ToolStripStatusLabel2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
-        Me.ToolStripStatusLabel2.Name = "ToolStripStatusLabel2"
-        Me.ToolStripStatusLabel2.Size = New System.Drawing.Size(500, 17)
+        Me.ProgressBar1.AutoSize = False
+        Me.ProgressBar1.Name = "ProgressBar1"
+        Me.ProgressBar1.Size = New System.Drawing.Size(300, 16)
+        Me.ProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous
         '
         'SplitContainer2
         '
@@ -290,7 +299,7 @@ Partial Class RenderForm
         '
         Me.FileListPopup.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileListPopupSaveAs, Me.FileListPopupOpenInHexViewer})
         Me.FileListPopup.Name = "FileListPopup"
-        Me.FileListPopup.Size = New System.Drawing.Size(190, 70)
+        Me.FileListPopup.Size = New System.Drawing.Size(190, 48)
         '
         'FileListPopupSaveAs
         '
@@ -305,6 +314,9 @@ Partial Class RenderForm
         Me.FileListPopupOpenInHexViewer.Text = "Open in Hex Viewer ..."
         '
         'FileListSaveFile
+        '
+        '
+        'SaveModelDialog
         '
         '
         'RenderForm
@@ -352,9 +364,8 @@ Partial Class RenderForm
     Friend WithEvents WireframeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents VerticesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
-    Friend WithEvents ToolStripStatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
+    Friend WithEvents StatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
     Friend WithEvents ResetViewToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ToolStripStatusLabel2 As System.Windows.Forms.ToolStripStatusLabel
     Friend WithEvents SplitContainer2 As System.Windows.Forms.SplitContainer
     Friend WithEvents SplitContainer1 As System.Windows.Forms.SplitContainer
     Friend WithEvents FileList As System.Windows.Forms.TreeView
@@ -371,5 +382,8 @@ Partial Class RenderForm
     Friend WithEvents FileListPopupSaveAs As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents FileListPopupOpenInHexViewer As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents FileListSaveFile As System.Windows.Forms.SaveFileDialog
+    Friend WithEvents ProgressBar1 As System.Windows.Forms.ToolStripProgressBar
+    Friend WithEvents SaveAsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents SaveModelDialog As System.Windows.Forms.SaveFileDialog
 
 End Class

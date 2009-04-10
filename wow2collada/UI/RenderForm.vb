@@ -11,10 +11,12 @@ Public Class RenderForm
     Private ModelOldPZ As Single
     Private ModelOldRX As Single
     Private ModelOldRZ As Single
+    Public CurrentTexture As String
+    Public CurrentFile As String
 
     Private Sub RenderForm_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
-        ToolStripStatusLabel1.Text = "World\AZEROTH\WESTFALL\PASSIVEDOODADS\Crate\WestFallCrate.m2"
-
+        CurrentFile = "World\AZEROTH\WESTFALL\PASSIVEDOODADS\Crate\WestFallCrate.m2"
+        StatusLabel1.Text = CurrentFile
         For Each i As String In wow2collada.myMPQ.FileTree.Nodes.Keys
             Dim Out As TreeNode = FileList.Nodes.Add(i)
             Out.Nodes.Add("(dummy)")
@@ -85,7 +87,7 @@ Public Class RenderForm
     Private Sub LoadModelFromMPQ()
         Dim Retval As System.Collections.Generic.List(Of String)
         ListBox1.Items.Clear()
-        Retval = wow2collada.render.LoadModelFromMPQ(ToolStripStatusLabel1.Text)
+        Retval = wow2collada.render.LoadModelFromMPQ(CurrentFile)
         For i As Integer = 0 To Retval.Count - 1
             ListBox1.Items.Add(Retval(i))
         Next
@@ -101,7 +103,8 @@ Public Class RenderForm
 
     Private Sub TreeView1_AfterSelect(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeViewEventArgs) Handles FileList.AfterSelect
         If e.Node.Nodes Is Nothing Or e.Node.Nodes.Count = 0 Then ' only look at leafs
-            ToolStripStatusLabel1.Text = e.Node.FullPath
+            CurrentFile = e.Node.FullPath
+            StatusLabel1.Text = CurrentFile
             LoadModelFromMPQ()
         End If
     End Sub
@@ -136,7 +139,7 @@ Public Class RenderForm
 
         If i > -1 And i < wow2collada.myHF.m_Textures.Count Then
             TextureBox.Image = wow2collada.myHF.m_Textures.ElementAt(i).Value.TexGra
-            ToolStripStatusLabel2.Text = wow2collada.myHF.m_Textures.ElementAt(i).Value.FileName
+            CurrentTexture = wow2collada.myHF.m_Textures.ElementAt(i).Value.FileName
         End If
     End Sub
 
@@ -166,7 +169,7 @@ Public Class RenderForm
     Private Sub TexturePopupOpenInViewer_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles TexturePopupOpenInViewer.Click
         Dim a As New ImageViewer
         a.PictureBox1.Image = TextureBox.Image
-        a.ToolStripStatusLabel1.Text = ToolStripStatusLabel2.Text
+        a.ToolStripStatusLabel1.Text = CurrentTexture
         a.Show()
     End Sub
 
@@ -202,4 +205,33 @@ Public Class RenderForm
         a.FileName = FileList.SelectedNode.FullPath
         a.Show()
     End Sub
+
+    Private Sub SaveAsToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles SaveAsToolStripMenuItem.Click
+        Dim FullName As String = CurrentFile
+        Dim i As Integer = FullName.LastIndexOf("\")
+        If i > 0 Then FullName = FullName.Substring(i + 1)
+        i = FullName.LastIndexOf(".")
+        If i > 0 Then FullName = FullName.Substring(0, i)
+
+        SaveModelDialog.OverwritePrompt = True
+        SaveModelDialog.FileName = FullName
+        SaveModelDialog.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        SaveModelDialog.Filter = "OBJ File (*.obj)|*.obj|Collada File (*.dae)|*.dae"
+        SaveModelDialog.ShowDialog()
+    End Sub
+
+    Private Sub SaveModelDialog_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles SaveModelDialog.FileOk
+        Dim Fullname As String = SaveModelDialog.FileName
+        Dim Extension As String = ""
+        Dim i As Integer = FullName.LastIndexOf(".")
+        If i > 0 Then Extension = FullName.Substring(i)
+
+        If Extension = ".obj" Then
+            Dim OBJ As New wow2collada.FileWriters.OBJ
+            OBJ.Save(Fullname, wow2collada.myHF.m_TriangleList, wow2collada.myHF.m_Textures)
+        End If
+
+        If Extension = ".dae" Then MsgBox("Collada Export not yet implemented.")
+    End Sub
+
 End Class
