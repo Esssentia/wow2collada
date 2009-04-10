@@ -4,9 +4,10 @@ Namespace wow2collada
         Public frm As RenderForm
         Public abo As Splash
         Public render As render3d
-        Public hf As HelperFunctions
+        Public myHF As HelperFunctions
         Public myDBC As FileReaders.DBC
         Public myMPQ As FileReaders.MPQ
+        Public CanvasTainted As Boolean = False
 
         Public Sub Main()
             abo = New Splash()
@@ -14,7 +15,7 @@ Namespace wow2collada
             Application.DoEvents()
             frm = New RenderForm()
             render = New render3d(frm.pic3d)
-            hf = New HelperFunctions
+            myHF = New HelperFunctions
             Application.DoEvents()
 
             myMPQ = New FileReaders.MPQ
@@ -28,8 +29,10 @@ Namespace wow2collada
             End If
 
             myDBC = New FileReaders.DBC
-            myDBC.LoadCreatureModelDataFromStream(myMPQ.LoadFile("DBFilesClient\CreatureModelData.dbc"))
-            myDBC.LoadCreatureDisplayInfoFromStream(myMPQ.LoadFile("DBFilesClient\CreatureDisplayInfo.dbc"))
+            Dim DBC_MD As String = "DBFilesClient\CreatureModelData.dbc"
+            Dim DBC_DI As String = "DBFilesClient\CreatureDisplayInfo.dbc"
+            myDBC.LoadCreatureModelDataFromStream(myMPQ.LoadFile(DBC_MD), DBC_MD)
+            myDBC.LoadCreatureDisplayInfoFromStream(myMPQ.LoadFile(DBC_DI), DBC_DI)
 
             ' Initialize Direct3D.
             If render.InitializeGraphics() Then
@@ -37,7 +40,7 @@ Namespace wow2collada
 
                 ' While the form is valid, render the scene and process messages.
                 Do While frm.Created
-                    render.Render()
+                    If Not CanvasTainted Then render.Render()
                     Application.DoEvents()
                 Loop
             End If

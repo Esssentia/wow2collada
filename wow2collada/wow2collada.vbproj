@@ -81,28 +81,40 @@
     <Import Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Splash.Designer.vb">
+    <Compile Include="FileReaders\wow2collada.FileReaders.COMMON.vb" />
+    <Compile Include="UI\HexViewer.Designer.vb">
+      <DependentUpon>HexViewer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UI\HexViewer.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Splash.Designer.vb">
       <DependentUpon>Splash.vb</DependentUpon>
     </Compile>
-    <Compile Include="Splash.vb">
+    <Compile Include="UI\Splash.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ImageViewer.Designer.vb">
+    <Compile Include="UI\ImageViewer.Designer.vb">
       <DependentUpon>ImageViewer.vb</DependentUpon>
     </Compile>
-    <Compile Include="ImageViewer.vb">
+    <Compile Include="UI\ImageViewer.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="RenderForm.Designer.vb">
+    <Compile Include="UI\RenderForm.Designer.vb">
       <DependentUpon>RenderForm.vb</DependentUpon>
     </Compile>
-    <Compile Include="RenderForm.vb">
+    <Compile Include="UI\RenderForm.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SubMain.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.M2.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.WMO.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.DBC.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.MPQ.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.BLP.vb" />
     <Compile Include="Utilities\wow2collada.Direct3D.vb" />
     <Compile Include="Utilities\wow2collada.Various.vb" />
-    <Compile Include="Utilities\wow2collada.FileReaders.vb" />
+    <Compile Include="FileReaders\wow2collada.FileReaders.ADT.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -120,11 +132,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Splash.resx">
+    <EmbeddedResource Include="UI\HexViewer.resx">
+      <DependentUpon>HexViewer.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Splash.resx">
       <DependentUpon>Splash.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ImageViewer.resx">
+    <EmbeddedResource Include="UI\ImageViewer.resx">
       <DependentUpon>ImageViewer.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -134,7 +150,7 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="RenderForm.resx">
+    <EmbeddedResource Include="UI\RenderForm.resx">
       <DependentUpon>RenderForm.vb</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
