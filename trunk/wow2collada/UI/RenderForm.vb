@@ -148,8 +148,8 @@ Public Class RenderForm
             wow2collada.CanvasTainted = True
             wow2collada.render = New wow2collada.render3d(wow2collada.frm.pic3d)
             wow2collada.render.InitializeGraphics()
-            'wow2collada.render.ResumeScene()
-            LoadModelFromMPQ()
+            wow2collada.render.ResumeScene()
+            'LoadModelFromMPQ()
             wow2collada.CanvasTainted = False
         End If
     End Sub

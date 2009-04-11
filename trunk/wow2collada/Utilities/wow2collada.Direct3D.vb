@@ -23,7 +23,9 @@ Namespace wow2collada
         Public ROT_VECTOR As Vector3 = New Vector3(0, 0, 0)
 
         ' The vertex buffer that holds drawing data.
-        Public m_VertexBuffer As VertexBuffer = Nothing
+        Private m_VertexBuffer As VertexBuffer = Nothing
+        Private DeviceLost As Boolean = False
+        Private PresentParams As PresentParameters
 
         Public Sub New(ByVal canvas As System.Windows.Forms.PictureBox)
             _canvas = canvas
@@ -31,25 +33,25 @@ Namespace wow2collada
 
         ' Initialize the graphics device. Return True if successful.
         Public Function InitializeGraphics() As Boolean
-            Dim params As New PresentParameters
+            PresentParams = New PresentParameters
 
             'set some presentation parameters (mainly todo with depth stuff)
-            params.Windowed = True
-            params.SwapEffect = SwapEffect.Discard
-            params.BackBufferFormat = Format.Unknown
-            params.EnableAutoDepthStencil = True
-            params.AutoDepthStencilFormat = DepthFormat.D16
+            PresentParams.Windowed = True
+            PresentParams.SwapEffect = SwapEffect.Discard
+            PresentParams.BackBufferFormat = Format.Unknown
+            PresentParams.EnableAutoDepthStencil = True
+            PresentParams.AutoDepthStencilFormat = DepthFormat.D16
 
             ' Best: Hardware device and hardware vertex processing.
             Try
-                m_Device = New Device(0, DeviceType.Hardware, _canvas, CreateFlags.HardwareVertexProcessing, params)
+                m_Device = New Device(0, DeviceType.Hardware, _canvas, CreateFlags.HardwareVertexProcessing, PresentParams)
             Catch
             End Try
 
             ' Good: Hardware device and software vertex processing.
             If m_Device Is Nothing Then
                 Try
-                    m_Device = New Device(0, DeviceType.Hardware, _canvas, CreateFlags.SoftwareVertexProcessing, params)
+                    m_Device = New Device(0, DeviceType.Hardware, _canvas, CreateFlags.SoftwareVertexProcessing, PresentParams)
                 Catch
                 End Try
             End If
@@ -57,7 +59,7 @@ Namespace wow2collada
             ' Adequate?: Software device and software vertex processing.
             If m_Device Is Nothing Then
                 Try
-                    m_Device = New Device(0, DeviceType.Reference, _canvas, CreateFlags.SoftwareVertexProcessing, params)
+                    m_Device = New Device(0, DeviceType.Reference, _canvas, CreateFlags.SoftwareVertexProcessing, PresentParams)
                 Catch ex As Exception
                     ' If we still can't make a device, give up.
                     MessageBox.Show("Error initializing Direct3D" & vbCrLf & vbCrLf & ex.Message, "Direct3D Error", MessageBoxButtons.OK)
@@ -109,6 +111,16 @@ Namespace wow2collada
 
         ' Draw.
         Public Sub Render()
+            'Do we still have a device?
+            If DeviceLost Then
+                Try
+                    m_Device.Reset(PresentParams)
+                    ResumeScene()
+                    DeviceLost = False
+                Catch
+                    DeviceLost = True
+                End Try
+            End If
             ' Clear the back buffer.
             m_Device.Clear(ClearFlags.Target Or ClearFlags.ZBuffer, Color.Black, 1, 0)
 
@@ -140,7 +152,11 @@ Namespace wow2collada
 
             ' End the scene and display.
             m_Device.EndScene()
-            m_Device.Present()
+            Try
+                m_Device.Present()
+            Catch
+                DeviceLost = True
+            End Try
         End Sub
 
         ' Setup the world, view, and projection matrices.
@@ -221,7 +237,7 @@ Namespace wow2collada
                 Tex.FileName = wow2collada.myHF.m_Textures.ElementAt(i).Value.FileName
                 Tex.TexGra = wow2collada.myHF.m_Textures.ElementAt(i).Value.TexGra
                 Tex.TexObj = Texture.FromBitmap(m_Device, Tex.TexGra, Usage.None, Pool.Managed)
-                wow2collada.myHF.m_Textures(i) = Tex
+                wow2collada.myHF.m_Textures(Tex.FileName) = Tex
             Next
 
             NUM_POINTS = wow2collada.myHF.m_TriangleList.Count * 3
