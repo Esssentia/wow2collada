@@ -69,6 +69,44 @@ Namespace wow2collada
             Return System.Text.Encoding.ASCII.GetString(Stack).Split(d, options:=System.StringSplitOptions.RemoveEmptyEntries)
         End Function
 
+        Public Function GetExtension(ByVal Filename As String)
+            Dim dotPos As Integer = Filename.LastIndexOf(".")
+            If dotPos >= 0 Then Return Filename.Substring(dotPos + 1)
+            Return ""
+        End Function
+
+        Public Function GetBaseName(ByVal Filename As String)
+            Dim dotPos As Integer = filename.LastIndexOf(".")
+            If dotPos >= 0 Then Filename = Filename.Substring(0, dotPos)
+
+            Dim slashPos As Integer = filename.LastIndexOf("\")
+            If slashPos >= 0 Then Filename = Filename.Substring(slashPos + 1)
+            Return Filename
+        End Function
+
+        Public Function GetBasePath(ByVal Filename As String)
+            Dim slashPos As Integer = Filename.LastIndexOf("\")
+            If slashPos >= 0 Then Return Filename.Substring(0, slashPos)
+            Return ""
+        End Function
+
+        Public Function GetFileName(ByVal Filename As String)
+            Return GetBaseName(Filename) & "." & GetExtension(Filename)
+        End Function
+
+        Public Function StringToPureAscii(ByVal Text As String)
+            Dim Out As String = ""
+            Dim CE As CharEnumerator = Text.GetEnumerator()
+            Dim CleanChars As String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+            While CE.MoveNext()
+                If CleanChars.IndexOf(CE.Current) <> -1 Then
+                    Out &= CE.Current
+                End If
+            End While
+
+            Return Out
+        End Function
     End Class
 
 End Namespace
