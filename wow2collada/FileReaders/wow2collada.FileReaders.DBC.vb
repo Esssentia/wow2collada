@@ -6,7 +6,7 @@ Imports Microsoft.DirectX
 Imports Microsoft.DirectX.Direct3D
 Imports MpqReader
 
-Namespace wow2collada.FileReaders
+Namespace FileReaders
 
     Class DBC
 
