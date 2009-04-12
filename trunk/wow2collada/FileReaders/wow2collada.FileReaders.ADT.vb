@@ -6,7 +6,7 @@ Imports Microsoft.DirectX
 Imports Microsoft.DirectX.Direct3D
 Imports MpqReader
 
-Namespace wow2collada.FileReaders
+Namespace FileReaders
 
     Class ADT
 
@@ -72,7 +72,7 @@ Namespace wow2collada.FileReaders
 
         Public Function LoadFromStream(ByVal File As Stream, ByVal FileName As String) As Boolean
             Dim br As New BinaryReader(File)
-        
+
             Dim ChunkId As String
             Dim ChunkLen As UInt32
             Dim FilePosition As UInt32 = 0

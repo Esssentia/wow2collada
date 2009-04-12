@@ -1,26 +1,20 @@
 ﻿Imports System
-Imports System.Collections.Generic
 Imports System.Text
 Imports System.IO
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
-Imports MpqReader
-Imports wow2collada.wow2collada
 
-Namespace wow2collada.FileWriters
+Namespace FileWriters
 
     Class OBJ
 
-        Public Function Save(ByVal Filename As String, ByRef Triangles As System.Collections.Generic.List(Of wow2collada.HelperFunctions.sTriangle), ByRef Textures As System.Collections.Generic.Dictionary(Of String, wow2collada.HelperFunctions.sTexture)) As Boolean
+        Public Function Save(ByVal Filename As String, ByRef Triangles As List(Of HelperFunctions.sTriangle), ByRef Textures As Dictionary(Of String, HelperFunctions.sTexture)) As Boolean
             'Save everything as OBJ...
             Dim OBJFile As String
             Dim MTLFile As String
             Dim TEXFile As String
             Dim BasePath As String
-            Dim Lines As New System.Collections.Generic.List(Of String)
+            Dim Lines As New List(Of String)
             Dim CurrMat As String = ""
-            Dim CurrTexW As Single = 0
-            Dim CurrTexH As Single = 0
+            Dim GroupNumber As Integer = 1
 
             BasePath = myHF.GetBasePath(Filename)
             OBJFile = BasePath & "\" & myHF.GetBaseName(Filename) & ".obj"
@@ -57,6 +51,7 @@ Namespace wow2collada.FileWriters
                     Lines.Add("Ks 1.000000 1.000000 1.000000")
                     Lines.Add("Ke 0.000000 0.000000 0.000000")
                     Lines.Add("Ns 0.000000")
+                    Lines.Add("illum 1")
                     Lines.Add(String.Format("map_Kd {0}", TEXFile))
                     Lines.Add("")
                 End With
@@ -84,6 +79,15 @@ Namespace wow2collada.FileWriters
             '...
 
 
+            'tried to get rid of duplicate vertices, normals and UVs with the use of dictionaries (getting a list of unique vertices/normals/..)
+            'but the performance was extremely crappy...
+            'probably have to find some clever way to avoid all those dictionary lookups
+            '
+            ' Filling the lists like this is very slow: if not x.containskey(y) then x.add(y)
+            ' Reading the lists back like this is very slow as well: x.elementat(i)
+            '
+            'there has to be a better way, but I haven't found it yet...
+
             Lines.Clear()
             Lines.Add("# Exported from wow2collada")
             Lines.Add("")
@@ -92,33 +96,27 @@ Namespace wow2collada.FileWriters
 
             'all vertices first
             For i As Integer = 0 To Triangles.Count - 1
-                With Triangles(i)
-                    Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", .P1.Position.X, .P1.Position.Y, .P1.Position.Z))
-                    Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", .P2.Position.X, .P2.Position.Y, .P2.Position.Z))
-                    Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", .P3.Position.X, .P3.Position.Y, .P3.Position.Z))
-                End With
+                For j As Integer = 0 To 2
+                    Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", Triangles(i).P(j).Position.X, Triangles(i).P(j).Position.Y, Triangles(i).P(j).Position.Z))
+                Next
             Next
 
             Lines.Add("")
 
             'now vertex normals
             For i As Integer = 0 To Triangles.Count - 1
-                With Triangles(i)
-                    Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", .P1.Normal.X, .P1.Normal.Y, .P1.Normal.Z))
-                    Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", .P2.Normal.X, .P2.Normal.Y, .P2.Normal.Z))
-                    Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", .P3.Normal.X, .P3.Normal.Y, .P3.Normal.Z))
-                End With
+                For j As Integer = 0 To 2
+                    Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", Triangles(i).P(j).Normal.X, Triangles(i).P(j).Normal.Y, Triangles(i).P(j).Normal.Z))
+                Next
             Next
 
             Lines.Add("")
 
             'now texture coordinates
             For i As Integer = 0 To Triangles.Count - 1
-                With Triangles(i)
-                    Lines.Add(String.Format("vt {0:f6} {1:f6}", .P1.UV.X, 1 - .P1.UV.Y))
-                    Lines.Add(String.Format("vt {0:f6} {1:f6}", .P2.UV.X, 1 - .P2.UV.Y))
-                    Lines.Add(String.Format("vt {0:f6} {1:f6}", .P3.UV.X, 1 - .P3.UV.Y))
-                End With
+                For j As Integer = 0 To 2
+                    Lines.Add(String.Format("vt {0:f6} {1:f6}", Triangles(i).P(j).UV.X, 1 - Triangles(i).P(j).UV.Y)) ' don't ask^^
+                Next
             Next
 
             Lines.Add("")
@@ -130,10 +128,12 @@ Namespace wow2collada.FileWriters
                         Lines.Add("")
                         Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(.TextureID))))
                         Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.TextureID))))
-                        Lines.Add("s 1")
+                        Lines.Add(String.Format("s {0}", GroupNumber))
                         CurrMat = myHF.GetBaseName(.TextureID)
+                        GroupNumber += 1
                     End If
-                    Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", (i * 3 + 1), (i * 3 + 2), (i * 3 + 3)))
+
+                    Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", i * 3 + 1, i * 3 + 2, i * 3 + 3))
                 End With
             Next
 

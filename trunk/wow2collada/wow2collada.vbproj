@@ -70,6 +70,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Import Include="Microsoft.DirectX" />
+    <Import Include="Microsoft.DirectX.Direct3D" />
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="System" />
     <Import Include="System.Collections" />
@@ -83,6 +85,12 @@
   <ItemGroup>
     <Compile Include="FileReaders\wow2collada.FileWriters.OBJ.vb" />
     <Compile Include="FileReaders\wow2collada.FileReaders.COMMON.vb" />
+    <Compile Include="UI\OpenWMOOptions.Designer.vb">
+      <DependentUpon>OpenWMOOptions.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UI\OpenWMOOptions.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\HexViewer.Designer.vb">
       <DependentUpon>HexViewer.vb</DependentUpon>
     </Compile>
@@ -136,6 +144,9 @@
     <EmbeddedResource Include="UI\HexViewer.resx">
       <DependentUpon>HexViewer.vb</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\OpenWMOOptions.resx">
+      <DependentUpon>OpenWMOOptions.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Splash.resx">
       <DependentUpon>Splash.vb</DependentUpon>

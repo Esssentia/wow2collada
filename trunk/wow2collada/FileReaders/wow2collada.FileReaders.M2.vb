@@ -1,12 +1,6 @@
-﻿Imports System
-Imports System.Collections.Generic
-Imports System.Text
-Imports System.IO
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
-Imports MpqReader
+﻿Imports System.IO
 
-Namespace wow2collada.FileReaders
+Namespace FileReaders
 
     Class SKIN
 
@@ -41,6 +35,16 @@ Namespace wow2collada.FileReaders
             Dim TexUnitNumber2 As UInt16
             Dim Transparency As UInt16
             Dim TextureAnim As UInt16
+        End Structure
+
+        ''' <summary>
+        ''' Structure to hold Triangle information (three indices of vertices)
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Structure sTriangle
+            Public VertexIndex1 As UInt16
+            Public VertexIndex2 As UInt16
+            Public VertexIndex3 As UInt16
         End Structure
 
         Public Triangles As sTriangle()
@@ -136,6 +140,28 @@ Namespace wow2collada.FileReaders
     End Class
 
     Class M2
+
+        ''' <summary>
+        ''' Structure to hold Triangle information (three indices of vertices)
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Structure sTriangle
+            Public VertexIndex1 As UInt16
+            Public VertexIndex2 As UInt16
+            Public VertexIndex3 As UInt16
+        End Structure
+
+        ''' <summary>
+        ''' Structure to hold Vertex information (Position, Normal, UV Coordinates and Bone-Information)
+        ''' </summary>
+        ''' <remarks></remarks>
+        Public Structure sVertex
+            Public Position As Vector3
+            Public BoneWeights As Byte()
+            Public BoneIndices As Byte()
+            Public Normal As Vector3
+            Public TextureCoords As Vector2
+        End Structure
 
         Public Structure sTexture
             Public Type As UInt32

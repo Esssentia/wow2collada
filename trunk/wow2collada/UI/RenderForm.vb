@@ -13,6 +13,43 @@ Public Class RenderForm
     Private ModelOldRZ As Single
     Public CurrentTexture As String
     Public CurrentFile As String
+    Private OLD_LOOKAT_POSITION As Vector3
+
+    Private Sub RenderForm_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles Me.KeyDown
+        Dim Mult As Integer = 1
+        Dim AngleStep As Single = 5
+        Dim PositionStep As Single = 0.1
+
+        If e.Modifiers = Keys.Shift Then Mult = 10
+        If e.Modifiers = Keys.Control Then Mult = 50
+
+        Select Case e.KeyCode
+            Case Keys.Up, Keys.W
+                wow2collada.render.Camera_MoveForward(PositionStep * Mult)
+            Case Keys.Down, Keys.S
+                wow2collada.render.Camera_MoveForward(-PositionStep * Mult)
+            Case Keys.Left, Keys.A
+                wow2collada.render.Camera_RotateY(-AngleStep * Mult)
+            Case Keys.Right, Keys.D
+                wow2collada.render.Camera_RotateY(AngleStep * Mult)
+            Case Keys.X
+                wow2collada.render.Camera_MoveUpDown(-PositionStep * Mult)
+            Case Keys.Space
+                wow2collada.render.Camera_MoveUpDown(PositionStep * Mult)
+            Case Keys.Q
+                wow2collada.render.Camera_Strafe(PositionStep * Mult)
+            Case Keys.E
+                wow2collada.render.Camera_Strafe(-PositionStep * Mult)
+            Case Keys.Y
+                wow2collada.render.Camera_RotateZ(AngleStep * Mult)
+            Case Keys.C
+                wow2collada.render.Camera_RotateZ(-AngleStep * Mult)
+            Case Else
+                'Debug.Print(e.KeyCode)
+        End Select
+
+        e.Handled = True
+    End Sub
 
     Private Sub RenderForm_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         CurrentFile = "World\AZEROTH\WESTFALL\PASSIVEDOODADS\Crate\WestFallCrate.m2"
@@ -55,11 +92,12 @@ Public Class RenderForm
         MouseIsDown = True
         MousePosX = e.X
         MousePosY = e.Y
-        ModelOldPX = wow2collada.render.LAT_VECTOR.X
-        ModelOldPY = wow2collada.render.LAT_VECTOR.Y
-        ModelOldPZ = wow2collada.render.DIS_VECTOR.Z
-        ModelOldRX = wow2collada.render.ROT_VECTOR.X
-        ModelOldRZ = wow2collada.render.ROT_VECTOR.Z
+        'ModelOldPX = wow2collada.render.LOOKAT_POSITION.X
+        'ModelOldPY = wow2collada.render.LOOKAT_POSITION.Y
+        'ModelOldPZ = wow2collada.render.CAM_POSITION.Z
+        'ModelOldRX = wow2collada.render.ROT_VECTOR.X
+        'ModelOldRZ = wow2collada.render.ROT_VECTOR.Z
+        'OLD_LOOKAT_POSITION = wow2collada.render.LOOKAT_POSITION
     End Sub
 
     Private Sub pic3d_MouseLeave(ByVal sender As Object, ByVal e As System.EventArgs) Handles pic3d.MouseLeave
@@ -68,16 +106,21 @@ Public Class RenderForm
 
     Private Sub pic3d_MouseMove(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles pic3d.MouseMove
         If MouseIsDown Then
-            If (ModifierKeys And Keys.Shift) = Keys.Shift Then
-                wow2collada.render.DIS_VECTOR.Z = Math.Max(Math.Min(ModelOldPZ - 20 * (e.X - MousePosX) / 400, -1), -200)
-            ElseIf (ModifierKeys And Keys.Control) = Keys.Control Then
-                wow2collada.render.ROT_VECTOR.X = (ModelOldRX + (e.Y - MousePosY) / 100) Mod (Math.PI * 2)
-                wow2collada.render.ROT_VECTOR.Z = (ModelOldRZ - (e.X - MousePosX) / 100) Mod (Math.PI * 2)
-            Else
-                wow2collada.render.LAT_VECTOR.X = Math.Max(Math.Min(ModelOldPX - 20 * (e.X - MousePosX) / 600, 50), -50)
-                wow2collada.render.LAT_VECTOR.Y = Math.Max(Math.Min(ModelOldPY + 20 * (e.Y - MousePosY) / 600, 50), -50)
-            End If
+            Select Case e.Button
+                Case Windows.Forms.MouseButtons.Left 'move view only (not implemented yet, might never be...)
+
+                Case Windows.Forms.MouseButtons.Right 'move orientation
+                    'Debug.Print wow2collada.render.VIEW_VECTOR
+                    wow2collada.render.Camera_RotateX((e.Y - MousePosY) / 20)
+                    wow2collada.render.Camera_RotateY((e.X - MousePosX) / 20)
+                    MousePosX = e.X
+                    MousePosY = e.Y
+
+            End Select
         End If
+        'wow2collada.render.CAM_POSITION.Z = Math.Max(Math.Min(ModelOldPZ - 20 * (e.X - MousePosX) / 400, -1), -200)
+        'wow2collada.render.ROT_VECTOR.X = (ModelOldRX + (e.Y - MousePosY) / 100) Mod (Math.PI * 2)
+        'wow2collada.render.ROT_VECTOR.Z = (ModelOldRZ - (e.X - MousePosX) / 100) Mod (Math.PI * 2)
     End Sub
 
     Private Sub pic3d_MouseUp(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles pic3d.MouseUp
@@ -154,6 +197,8 @@ Public Class RenderForm
         End If
     End Sub
 
+
+
     Private Sub TexturePopupSaveAs_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles TexturePopupSaveAs.Click
         TextureSaveFile.OverwritePrompt = True
         TextureSaveFile.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
@@ -185,6 +230,14 @@ Public Class RenderForm
         FileListSaveFile.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
         FileListSaveFile.Filter = "All Files (*.*)|*.*"
         FileListSaveFile.ShowDialog()
+    End Sub
+
+    Private Sub FileList_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles FileList.KeyDown
+        e.Handled = True
+    End Sub
+
+    Private Sub FileList_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles FileList.KeyPress
+        e.Handled = True
     End Sub
 
     Private Sub FileList_MouseDown(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles FileList.MouseDown
@@ -223,8 +276,8 @@ Public Class RenderForm
     Private Sub SaveModelDialog_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles SaveModelDialog.FileOk
         Dim Fullname As String = SaveModelDialog.FileName
         Dim Extension As String = ""
-        Dim i As Integer = FullName.LastIndexOf(".")
-        If i > 0 Then Extension = FullName.Substring(i)
+        Dim i As Integer = Fullname.LastIndexOf(".")
+        If i > 0 Then Extension = Fullname.Substring(i)
 
         If Extension = ".obj" Then
             Dim OBJ As New wow2collada.FileWriters.OBJ

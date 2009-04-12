@@ -1,49 +1,13 @@
-﻿Imports System
-Imports System.Collections.Generic
+﻿Imports System.IO
 Imports System.Text
-Imports System.IO
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
 Imports MpqReader
 
-Namespace wow2collada.FileReaders
+Namespace FileReaders
 
-    Public Class Node
-        Dim _Data As String
-        Dim _Nodes As System.Collections.Generic.Dictionary(Of String, wow2collada.FileReaders.Node)
-        Dim _Parent As wow2collada.FileReaders.Node
-
-        Public Sub New(ByVal parent As wow2collada.FileReaders.Node, ByVal text As String)
-            _Parent = parent
-            _Data = text
-        End Sub
-
-        Public Function Add(ByVal text As String)
-            If _Nodes Is Nothing Then ' no children yet
-                Dim NewNode As wow2collada.FileReaders.Node = New wow2collada.FileReaders.Node(Me, text)
-                _Nodes = New System.Collections.Generic.Dictionary(Of String, wow2collada.FileReaders.Node)
-                _Nodes.Add(text, NewNode)
-                Return NewNode
-            ElseIf Not _Nodes.ContainsKey(text) Then ' children but not found
-                Dim NewNode As wow2collada.FileReaders.Node = New wow2collada.FileReaders.Node(Me, text)
-                '_Nodes = New System.Collections.Generic.Dictionary(Of String, wow2collada.Node)
-                _Nodes.Add(text, NewNode)
-                Return NewNode
-            Else
-                Return _Nodes(text)
-            End If
-        End Function
-
-        Public Function Nodes() As System.Collections.Generic.Dictionary(Of String, wow2collada.FileReaders.Node)
-            Return _Nodes
-        End Function
-
-        Public Function Data() As String
-            Return _Data
-        End Function
-
-    End Class
-
+    ''' <summary>
+    ''' Class to deal with MPQ archives (encapsulates MpqTool, (C) 2006 Weichhold (oliver@weichhold.com))
+    ''' </summary>
+    ''' <remarks></remarks>
     Class MPQ
 
         ' All C# MPQ Functions are
@@ -62,6 +26,10 @@ Namespace wow2collada.FileReaders
         Public FileList As New System.Collections.Generic.Dictionary(Of String, FileListEntry)
         Public FileTree As New wow2collada.FileReaders.Node(Nothing, "ROOT")
 
+        ''' <summary>
+        ''' Initialize the MPQ Filereader (get location of the MPQ files and store the locations for later use
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Sub New()
             Dim regKey1 As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\Blizzard Entertainment\World of Warcraft")
             Dim regKey2 As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\Wow6432Node\Blizzard Entertainment\World of Warcraft")
@@ -96,6 +64,10 @@ Namespace wow2collada.FileReaders
 
         End Sub
 
+        ''' <summary>
+        ''' Get a list of all files in those MPQ files and store them for later
+        ''' </summary>
+        ''' <remarks></remarks>
         Public Sub GenerateFileList()
             Dim mainProz As Single
             Dim subProz As Single
@@ -122,12 +94,25 @@ Namespace wow2collada.FileReaders
                     If a.Path.LastIndexOf(".") > 0 Then
                         If a.Path.IndexOf("world of warcraft launcher.app") <> 0 And a.Path.IndexOf("world of warcraft.app") <> 0 And a.Path.IndexOf("background downloader.app") <> 0 Then
                             Select Case a.Path.Substring(a.Path.LastIndexOf("."))
-                                Case ".m2", ".adt", ".wmo"
+                                Case ".m2", ".adt"
                                     Dim Parts As String() = a.Path.Split("\")
                                     Dim parent As wow2collada.FileReaders.Node = FileTree
                                     For k As Integer = 0 To Parts.Count - 1
                                         parent = parent.Add(Parts(k))
                                     Next
+
+                                Case ".wmo"
+                                    'filter out "sub-wmo's"
+
+                                    Dim regex As New RegularExpressions.Regex("_\d{3}.wmo$")
+                                    If Not regex.IsMatch(a.Path) Then
+                                        Dim Parts As String() = a.Path.Split("\")
+                                        Dim parent As wow2collada.FileReaders.Node = FileTree
+                                        For k As Integer = 0 To Parts.Count - 1
+                                            parent = parent.Add(Parts(k))
+                                        Next
+                                    End If
+
                                 Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".dbc", ".sbt", ".ttf"
                                 Case ".xsd", ".wdl", ".wdt", ".icns", ".xib", ".nib", ".wtf", ".rsrc", ".bls", ".html", ".pdf", ".js", ".jpg", ".wfx"
                                 Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif", ".blp", ".wav", ".mp3"
@@ -144,11 +129,23 @@ Namespace wow2collada.FileReaders
             Next
         End Sub
 
+        ''' <summary>
+        ''' Locate a file in the MPQ file list
+        ''' </summary>
+        ''' <param name="path">The file to locate</param>
+        ''' <returns>True if found, false otherwise</returns>
+        ''' <remarks></remarks>
         Public Function Locate(ByVal path As String) As Boolean
             If path Is Nothing Then Return False
             Return FileList.ContainsKey(path.ToLower)
         End Function
 
+        ''' <summary>
+        ''' Load a file from the appropriate MPQ archive and return a stream to it
+        ''' </summary>
+        ''' <param name="path">The file to load</param>
+        ''' <returns>A stream of the requested file</returns>
+        ''' <remarks></remarks>
         Public Function LoadFile(ByVal path As String) As Stream
             If FileList.ContainsKey(path.ToLower) Then
                 Dim fi As FileListEntry = FileList(path.ToLower)
@@ -168,6 +165,13 @@ Namespace wow2collada.FileReaders
 
         End Function
 
+        ''' <summary>
+        ''' Save a file from an MPQ archive and save it to disk
+        ''' </summary>
+        ''' <param name="MPQFileName">The filename within the MPQ archive</param>
+        ''' <param name="DiskFileName">The filename on disk to write to</param>
+        ''' <returns>True if found, false otherwise</returns>
+        ''' <remarks></remarks>
         Public Function SaveFileToDisk(ByVal MPQFileName, ByVal DiskFileName)
             If Locate(MPQFileName) Then
                 Dim MPQStream As System.IO.Stream = LoadFile(MPQFileName)
@@ -189,6 +193,7 @@ Namespace wow2collada.FileReaders
             End If
 
         End Function
+
     End Class
 
 End Namespace
