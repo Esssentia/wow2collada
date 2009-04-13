@@ -13,7 +13,6 @@ Public Class RenderForm
     Private ModelOldRZ As Single
     Public CurrentTexture As String
     Public CurrentFile As String
-    Private OLD_LOOKAT_POSITION As Vector3
 
     Private Sub RenderForm_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles Me.KeyDown
         Dim Mult As Integer = 1
@@ -130,12 +129,12 @@ Public Class RenderForm
     Private Sub LoadModelFromMPQ()
         Dim Retval As System.Collections.Generic.List(Of String)
         ListBox1.Items.Clear()
-        Retval = wow2collada.render.LoadModelFromMPQ(CurrentFile)
+        Retval = myHF.LoadModelFromMPQ(CurrentFile)
         For i As Integer = 0 To Retval.Count - 1
             ListBox1.Items.Add(Retval(i))
         Next
         TrackBar1.Minimum = 0
-        TrackBar1.Maximum = Math.Max(0, wow2collada.myHF.m_Textures.Count - 1)
+        TrackBar1.Maximum = Math.Max(0, myHF.Textures.Count - 1)
         TrackBar1.Value = 0
         TrackBar1_ValueChanged(Me, New System.EventArgs)
     End Sub
@@ -180,9 +179,9 @@ Public Class RenderForm
     Private Sub TrackBar1_ValueChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles TrackBar1.ValueChanged
         Dim i As Integer = TrackBar1.Value
 
-        If i > -1 And i < wow2collada.myHF.m_Textures.Count Then
-            TextureBox.Image = wow2collada.myHF.m_Textures.ElementAt(i).Value.TexGra
-            CurrentTexture = wow2collada.myHF.m_Textures.ElementAt(i).Value.FileName
+        If i > -1 And i < myHF.Textures.Count Then
+            TextureBox.Image = myHF.Textures.ElementAt(i).Value.TexGra
+            CurrentTexture = myHF.Textures.ElementAt(i).Value.ID
         End If
     End Sub
 
@@ -191,8 +190,7 @@ Public Class RenderForm
             wow2collada.CanvasTainted = True
             wow2collada.render = New wow2collada.render3d(wow2collada.frm.pic3d)
             wow2collada.render.InitializeGraphics()
-            wow2collada.render.ResumeScene()
-            'LoadModelFromMPQ()
+            wow2collada.render.SetupScene()
             wow2collada.CanvasTainted = False
         End If
     End Sub
@@ -280,11 +278,16 @@ Public Class RenderForm
         If i > 0 Then Extension = Fullname.Substring(i)
 
         If Extension = ".obj" Then
-            Dim OBJ As New wow2collada.FileWriters.OBJ
-            OBJ.Save(Fullname, wow2collada.myHF.m_TriangleList, wow2collada.myHF.m_Textures)
+            Dim OBJ As New FileWriters.OBJ
+            OBJ.Save(Fullname, myHF.TriangleList, myHF.Textures)
         End If
 
         If Extension = ".dae" Then MsgBox("Collada Export not yet implemented.")
+    End Sub
+
+    Private Sub RotateToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles RotateToolStripMenuItem.Click
+        RotateToolStripMenuItem.Checked = Not RotateToolStripMenuItem.Checked
+        render.WorldRotation(RotateToolStripMenuItem.Checked)
     End Sub
 
 End Class

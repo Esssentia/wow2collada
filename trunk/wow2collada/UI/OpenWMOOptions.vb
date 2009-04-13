@@ -99,8 +99,8 @@ Public Class OpenWMOOptions
         Dim BR As BinaryReader
 
         'reset data structures
-        myHF.m_Textures.Clear()
-        myHF.m_TriangleList.Clear()
+        myHF.Textures.Clear()
+        myHF.TriangleList.Clear()
 
         'load and parse Sub WMOs
         StatusLabel1.Text = "Loading Sub-WMO... 0/" & _SubWMO.Count
@@ -136,14 +136,13 @@ Public Class OpenWMOOptions
 
             Dim TexFi As String = _WMO.Textures(i)
             If myMPQ.Locate(TexFi) Then
-                If Not wow2collada.myHF.m_Textures.ContainsKey(TexFi) Then
+                If Not myHF.Textures.ContainsKey(TexFi) Then
                     Dim Tex As New wow2collada.HelperFunctions.sTexture
                     Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
                     If Not TexImg Is Nothing Then
-                        Tex.FileName = TexFi
+                        Tex.ID = TexFi
                         Tex.TexGra = TexImg
-                        Tex.TexObj = Texture.FromBitmap(render.m_Device, TexImg, Usage.None, Pool.Managed)
-                        myHF.m_Textures(TexFi) = Tex
+                        myHF.Textures(TexFi) = Tex
                     End If
                 End If
             End If
@@ -188,7 +187,7 @@ Public Class OpenWMOOptions
                         Tri.P = New HelperFunctions.sVertex() {V1, V2, V3}
                         Tri.TextureID = _WMO.Textures(MatID)
 
-                        myHF.m_TriangleList.Add(Tri)
+                        myHF.TriangleList.Add(Tri)
                     End With
                 End If
             Next
@@ -228,7 +227,7 @@ Public Class OpenWMOOptions
                         Dim FileNameSKIN As String = .ModelFile.Substring(0, .ModelFile.LastIndexOf(".")) + "00.skin"
                         MD20.LoadFromStream(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
                         SKIN.LoadFromStream(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
-                        render.CreateVertexBufferFromM2(MD20, SKIN, .Position, .Orientation, .Scale)
+                        myHF.CreateVertexBufferFromM2(MD20, SKIN, .Position, .Orientation, .Scale)
                     End If
                 End With
             Next

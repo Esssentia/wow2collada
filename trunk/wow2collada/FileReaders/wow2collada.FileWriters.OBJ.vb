@@ -42,10 +42,10 @@ Namespace FileWriters
             For i As Integer = 0 To Textures.Count - 1
                 With (Textures.ElementAt(i).Value)
 
-                    TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.FileName)) & ".png"
+                    TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.ID)) & ".png"
                     .TexGra.Save(TEXFile)
 
-                    Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.FileName))))
+                    Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.ID))))
                     Lines.Add("Kd 1.000000 1.000000 1.000000")
                     Lines.Add("Ka 1.000000 1.000000 1.000000")
                     Lines.Add("Ks 1.000000 1.000000 1.000000")

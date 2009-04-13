@@ -41,8 +41,8 @@ Namespace FileReaders
             Else
                 _BasePath = p1 & "data\"
             End If
-            ' manual override because I have several WOW installations with different patchlevels
-            _BasePath = "d:\temp\data\"
+            ' manual override for my computer because I have several WOW installations with different patchlevels
+            If System.Environment.MachineName.ToLower = "remo-d2" Then _BasePath = "d:\temp\data\"
 
             ReDim _KnownMPQ(15) ' I don't want to iterate through the directory reading arbitrary MPQs... (for now)
             _KnownMPQ(0) = "common.mpq"
@@ -77,55 +77,59 @@ Namespace FileReaders
 
             For i As Integer = 0 To _KnownMPQ.Length - 1
                 Dim archiveFile As String = _BasePath & _KnownMPQ(i)
-                Dim archive As MpqArchive = New MpqArchive(archiveFile)
 
-                mainProz = i * subTick
+                If File.Exists(archiveFile) Then
 
-                For j As Integer = 0 To archive.Files.Length - 1
-                    subProz = j / archive.Files.Length * subTick
-                    abo.UpdateProgress(mainProz + subProz)
-                    Application.DoEvents()
-                    Dim a As FileListEntry
-                    a.Size = archive.Files(j).UncompressedSize
-                    a.Archive = archiveFile
-                    a.Path = archive.Files(j).Name.ToLower
-                    FileList(a.Path) = a
+                    Dim archive As MpqArchive = New MpqArchive(archiveFile)
 
-                    If a.Path.LastIndexOf(".") > 0 Then
-                        If a.Path.IndexOf("world of warcraft launcher.app") <> 0 And a.Path.IndexOf("world of warcraft.app") <> 0 And a.Path.IndexOf("background downloader.app") <> 0 Then
-                            Select Case a.Path.Substring(a.Path.LastIndexOf("."))
-                                Case ".m2", ".adt"
-                                    Dim Parts As String() = a.Path.Split("\")
-                                    Dim parent As wow2collada.FileReaders.Node = FileTree
-                                    For k As Integer = 0 To Parts.Count - 1
-                                        parent = parent.Add(Parts(k))
-                                    Next
+                    mainProz = i * subTick
 
-                                Case ".wmo"
-                                    'filter out "sub-wmo's"
+                    For j As Integer = 0 To archive.Files.Length - 1
+                        subProz = j / archive.Files.Length * subTick
+                        abo.UpdateProgress(mainProz + subProz)
+                        Application.DoEvents()
+                        Dim a As FileListEntry
+                        a.Size = archive.Files(j).UncompressedSize
+                        a.Archive = archiveFile
+                        a.Path = archive.Files(j).Name.ToLower
+                        FileList(a.Path) = a
 
-                                    Dim regex As New RegularExpressions.Regex("_\d{3}.wmo$")
-                                    If Not regex.IsMatch(a.Path) Then
+                        If a.Path.LastIndexOf(".") > 0 Then
+                            If a.Path.IndexOf("world of warcraft launcher.app") <> 0 And a.Path.IndexOf("world of warcraft.app") <> 0 And a.Path.IndexOf("background downloader.app") <> 0 Then
+                                Select Case a.Path.Substring(a.Path.LastIndexOf("."))
+                                    Case ".m2", ".adt"
                                         Dim Parts As String() = a.Path.Split("\")
                                         Dim parent As wow2collada.FileReaders.Node = FileTree
                                         For k As Integer = 0 To Parts.Count - 1
                                             parent = parent.Add(Parts(k))
                                         Next
-                                    End If
 
-                                Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".dbc", ".sbt", ".ttf"
-                                Case ".xsd", ".wdl", ".wdt", ".icns", ".xib", ".nib", ".wtf", ".rsrc", ".bls", ".html", ".pdf", ".js", ".jpg", ".wfx"
-                                Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif", ".blp", ".wav", ".mp3"
-                                    'ignore... (don't allow user to select those directly as it would be pointless, kind of, we are NOT in the business of MPQ Explorer)
-                                Case Else
-                                    'unknown file type? Oo
-                                    Debug.Print(i)
-                            End Select
+                                    Case ".wmo"
+                                        'filter out "sub-wmo's"
+
+                                        Dim regex As New RegularExpressions.Regex("_\d{3}.wmo$")
+                                        If Not regex.IsMatch(a.Path) Then
+                                            Dim Parts As String() = a.Path.Split("\")
+                                            Dim parent As wow2collada.FileReaders.Node = FileTree
+                                            For k As Integer = 0 To Parts.Count - 1
+                                                parent = parent.Add(Parts(k))
+                                            Next
+                                        End If
+
+                                    Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".dbc", ".sbt", ".ttf"
+                                    Case ".xsd", ".wdl", ".wdt", ".icns", ".xib", ".nib", ".wtf", ".rsrc", ".bls", ".html", ".pdf", ".js", ".jpg", ".wfx"
+                                    Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif", ".blp", ".wav", ".mp3"
+                                        'ignore... (don't allow user to select those directly as it would be pointless, kind of, we are NOT in the business of MPQ Explorer)
+                                    Case Else
+                                        'unknown file type? Oo
+                                        Debug.Print(i)
+                                End Select
+                            End If
                         End If
-                    End If
-                Next
+                    Next
 
-                archive.Dispose()
+                    archive.Dispose()
+                End If
             Next
         End Sub
 
@@ -157,10 +161,10 @@ Namespace FileReaders
                     archive.Dispose()
                     Return New MemoryStream(buffer)
                 Else
-                    Return New MemoryStream()
+                    Return Nothing
                 End If
             Else
-                Return New MemoryStream()
+                Return Nothing
             End If
 
         End Function
