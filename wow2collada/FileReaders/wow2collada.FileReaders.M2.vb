@@ -42,9 +42,7 @@ Namespace FileReaders
         ''' </summary>
         ''' <remarks></remarks>
         Public Structure sTriangle
-            Public VertexIndex1 As UInt16
-            Public VertexIndex2 As UInt16
-            Public VertexIndex3 As UInt16
+            Public VertexIndex() As UInt16
         End Structure
 
         Public Triangles As sTriangle()
@@ -83,9 +81,7 @@ Namespace FileReaders
             ReDim Triangles(nTriangles - 1)
             br.BaseStream.Position = ofsTriangles
             For i As Integer = 0 To nTriangles - 1
-                Triangles(i).VertexIndex1 = VertexIndices(br.ReadUInt16)
-                Triangles(i).VertexIndex2 = VertexIndices(br.ReadUInt16)
-                Triangles(i).VertexIndex3 = VertexIndices(br.ReadUInt16)
+                Triangles(i).VertexIndex = New UInt16() {VertexIndices(br.ReadUInt16), VertexIndices(br.ReadUInt16), VertexIndices(br.ReadUInt16)}
             Next
 
             ReDim BoneIndices(nProperties - 1)

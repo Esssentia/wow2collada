@@ -66,11 +66,15 @@ Namespace FileReaders
         Public WMOPlacements() As sWMOPlacement
         Public MCNKs(,) As sMCNK
 
+        Public Sub Load(ByVal File As Byte())
+            Load(New MemoryStream(File))
+        End Sub
+
         Public Function Load(ByVal FileName As String) As Boolean
-            Return LoadFromStream(File.OpenRead(FileName), FileName)
+            Return Load(File.OpenRead(FileName))
         End Function
 
-        Public Function LoadFromStream(ByVal File As Stream, ByVal FileName As String) As Boolean
+        Public Function Load(ByVal File As Stream) As Boolean
             Dim br As New BinaryReader(File)
 
             Dim ChunkId As String
@@ -78,8 +82,9 @@ Namespace FileReaders
             Dim FilePosition As UInt32 = 0
             Dim Version As UInt32
             ReDim MCNKs(15, 15)
+            Dim Done As Boolean = False
 
-            While br.BaseStream.Position < br.BaseStream.Length
+            While br.BaseStream.Position < br.BaseStream.Length And Not Done
                 ChunkId = br.ReadChars(4)
                 ChunkId = myHF.StrRev(ChunkId)
                 ChunkLen = br.ReadUInt32
@@ -153,7 +158,7 @@ Namespace FileReaders
                             .nSndEmitters = br.ReadUInt32
                             .offsLiquid = br.ReadUInt32
                             .sizeLiquid = br.ReadUInt32
-                            .Position = New Vector3(valueZ:=br.ReadSingle, valueX:=br.ReadSingle, valueY:=br.ReadSingle)
+                            .Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             .offsColorValues = br.ReadUInt32
                             .props = br.ReadUInt32
                             .effectId = br.ReadUInt32
@@ -175,13 +180,13 @@ Namespace FileReaders
 
                     Case "MH2O" 'Water and such...
                         ' do it :)
-
+                    Case "", Chr(0) & Chr(0) & Chr(0) & Chr(0)
+                        Done = True
                     Case Else
                         Debug.Print("Unknown Chunktype: " & ChunkId)
                 End Select
 
                 FilePosition += ChunkLen + 8
-                If (FilePosition Mod 4 <> 0) Then Debug.Print("Argh...:" & ChunkId & "-" & ChunkLen)
                 br.BaseStream.Position = FilePosition
             End While
 
