@@ -252,8 +252,7 @@ Public Class RenderForm
     End Sub
 
     Private Sub FileListPopupOpenInHexViewer_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles FileListPopupOpenInHexViewer.Click
-        Dim a As New HexViewer
-        a.FileName = FileList.SelectedNode.FullPath
+        Dim a As New HexViewer(FileList.SelectedNode.FullPath)
         a.Show()
     End Sub
 

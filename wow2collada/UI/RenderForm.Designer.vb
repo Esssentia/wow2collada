@@ -32,6 +32,7 @@ Partial Class RenderForm
         Me.WireframeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.VerticesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ResetViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.RotateToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.StatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
         Me.ProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
@@ -52,7 +53,6 @@ Partial Class RenderForm
         Me.FileListPopupOpenInHexViewer = New System.Windows.Forms.ToolStripMenuItem
         Me.FileListSaveFile = New System.Windows.Forms.SaveFileDialog
         Me.SaveModelDialog = New System.Windows.Forms.SaveFileDialog
-        Me.RotateToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
         Me.SplitContainer2.Panel1.SuspendLayout()
@@ -121,7 +121,7 @@ Partial Class RenderForm
         '
         Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SolidToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.VerticesToolStripMenuItem})
         Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
-        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.DisplayToolStripMenuItem.Text = "Display"
         '
         'SolidToolStripMenuItem
@@ -147,8 +147,16 @@ Partial Class RenderForm
         'ResetViewToolStripMenuItem
         '
         Me.ResetViewToolStripMenuItem.Name = "ResetViewToolStripMenuItem"
-        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.ResetViewToolStripMenuItem.Text = "Reset View"
+        '
+        'RotateToolStripMenuItem
+        '
+        Me.RotateToolStripMenuItem.Checked = True
+        Me.RotateToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.RotateToolStripMenuItem.Name = "RotateToolStripMenuItem"
+        Me.RotateToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
+        Me.RotateToolStripMenuItem.Text = "Rotate"
         '
         'StatusStrip1
         '
@@ -319,14 +327,6 @@ Partial Class RenderForm
         '
         'SaveModelDialog
         '
-        '
-        'RotateToolStripMenuItem
-        '
-        Me.RotateToolStripMenuItem.Checked = True
-        Me.RotateToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.RotateToolStripMenuItem.Name = "RotateToolStripMenuItem"
-        Me.RotateToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
-        Me.RotateToolStripMenuItem.Text = "Rotate"
         '
         'RenderForm
         '

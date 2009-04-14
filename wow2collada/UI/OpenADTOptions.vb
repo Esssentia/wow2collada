@@ -172,6 +172,9 @@ Public Class OpenADTOptions
                             Tri(0).P(0).Normal = New Vector3(0, 0, 1)
                             Tri(0).P(1).Normal = New Vector3(0, 0, 1)
                             Tri(0).P(2).Normal = New Vector3(0, 0, 1)
+                            Tri(0).P(0).UV = New Vector2(0, 0) 'dummy for now
+                            Tri(0).P(1).UV = New Vector2(0, 1) 'dummy for now
+                            Tri(0).P(2).UV = New Vector2(0.5, 0.5) 'dummy for now
 
                             Tri(1).P = New sVertex() {New sVertex, New sVertex, New sVertex}
                             Tri(1).P(0).Position = New Vector3(xr + 0.0 * dx, yr + 1.0 * dy, zo + .HeightMap9x9(x + 0, y + 1))
@@ -180,6 +183,9 @@ Public Class OpenADTOptions
                             Tri(1).P(0).Normal = New Vector3(0, 0, 1)
                             Tri(1).P(1).Normal = New Vector3(0, 0, 1)
                             Tri(1).P(2).Normal = New Vector3(0, 0, 1)
+                            Tri(1).P(0).UV = New Vector2(0, 1) 'dummy for now
+                            Tri(1).P(1).UV = New Vector2(1, 1) 'dummy for now
+                            Tri(1).P(2).UV = New Vector2(0.5, 0.5) 'dummy for now
 
                             Tri(2).P = New sVertex() {New sVertex, New sVertex, New sVertex}
                             Tri(2).P(0).Position = New Vector3(xr + 1.0 * dx, yr + 1.0 * dy, zo + .HeightMap9x9(x + 1, y + 1))
@@ -188,6 +194,9 @@ Public Class OpenADTOptions
                             Tri(2).P(0).Normal = New Vector3(0, 0, 1)
                             Tri(2).P(1).Normal = New Vector3(0, 0, 1)
                             Tri(2).P(2).Normal = New Vector3(0, 0, 1)
+                            Tri(2).P(0).UV = New Vector2(1, 1) 'dummy for now
+                            Tri(2).P(1).UV = New Vector2(1, 0) 'dummy for now
+                            Tri(2).P(2).UV = New Vector2(0.5, 0.5) 'dummy for now
 
                             Tri(3).P = New sVertex() {New sVertex, New sVertex, New sVertex}
                             Tri(3).P(0).Position = New Vector3(xr + 1.0 * dx, yr + 0.0 * dy, zo + .HeightMap9x9(x + 1, y + 0))
@@ -196,6 +205,9 @@ Public Class OpenADTOptions
                             Tri(3).P(0).Normal = New Vector3(0, 0, 1)
                             Tri(3).P(1).Normal = New Vector3(0, 0, 1)
                             Tri(3).P(2).Normal = New Vector3(0, 0, 1)
+                            Tri(3).P(0).UV = New Vector2(1, 0) 'dummy for now
+                            Tri(3).P(1).UV = New Vector2(0, 0) 'dummy for now
+                            Tri(3).P(2).UV = New Vector2(0.5, 0.5) 'dummy for now
 
                             myHF.TriangleList.Add(Tri(0))
                             myHF.TriangleList.Add(Tri(1))
@@ -207,22 +219,22 @@ Public Class OpenADTOptions
             Next
         Next
 
-        ''load and parse Sub WMOs
-        'StatusLabel1.Text = "Loading Sub-WMO... 0/" & _SubWMO.Count
-        'ProgressBar1.Value = 0
-        'ProgressBar1.ForeColor = Color.FromArgb(255, 255, 0, 0)
-        'Application.DoEvents()
+        'load and parse WMOs
+        StatusLabel1.Text = "Loading WMO... 0/" & _WMOs.Count
+        ProgressBar1.Value = 0
+        ProgressBar1.ForeColor = Color.FromArgb(255, 255, 0, 0)
+        Application.DoEvents()
 
-        'For i As Integer = 0 To _SubWMO.Count - 1
+        For i As Integer = 0 To _WMOs.Count - 1
 
-        '    StatusLabel1.Text = "Loading Sub-WMO ... " & i & "/" & _SubWMO.Count
-        '    ProgressBar1.Value = 100 * (i / _SubWMO.Count)
-        '    ProgressBar1.ForeColor = Color.FromArgb(255, 255 - 255 * ProgressBar1.Value / 100, 255 * ProgressBar1.Value / 100, 0)
-        '    Application.DoEvents()
+            StatusLabel1.Text = "Loading Sub-WMO ... " & i & "/" & _WMOs.Count
+            ProgressBar1.Value = 100 * (i / _WMOs.Count)
+            ProgressBar1.ForeColor = Color.FromArgb(255, 255 - 255 * ProgressBar1.Value / 100, 255 * ProgressBar1.Value / 100, 0)
+            Application.DoEvents()
 
-        '    BR = New BinaryReader(myMPQ.LoadFile(_SubWMO(i)))
-        '    _WMO.LoadSub(BR.ReadBytes(BR.BaseStream.Length))
-        'Next
+            '    BR = New BinaryReader(myMPQ.LoadFile(_SubWMO(i)))
+            '    _WMO.LoadSub(BR.ReadBytes(BR.BaseStream.Length))
+        Next
 
         ''load textures
         'StatusLabel1.Text = "Loading Textures... 0/" & _WMO.Textures.Length
@@ -253,7 +265,7 @@ Public Class OpenADTOptions
         '    End If
         'Next
 
-        If _ADT.M2Placements.Count > 0 And LoadM2s.Checked Then
+        If _ADT.M2Placements.Count > 0 Then
             For i As Integer = 0 To ListViewM2.Items.Count - 1
                 If ListViewM2.Items(i).Checked Then
                     _M2Selected.Add(i)
@@ -285,15 +297,16 @@ Public Class OpenADTOptions
                     SKIN.LoadFromStream(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
 
                     Dim Pos As New Vector3(.Position.Z - 32.0F * (1600.0F / 3.0F) + BaseX - 8 * (1600.0F / 48.0F), .Position.X - 32.0F * (1600.0F / 3.0F) + BaseY - 8 * (1600.0F / 48.0F), .Position.Y)
-                    'Debug.Print("{0} {1} {2}", Position.X, Position.Y, Position.Z)
 
                     'turn orientation into quaternion
-                    Dim xMat As Matrix = Matrix.RotationX(.Orientation.Z * Math.PI / 180)
-                    Dim yMat As Matrix = Matrix.RotationY((.Orientation.Y - 90) * Math.PI / 180)
-                    Dim zMat As Matrix = Matrix.RotationZ(-.Orientation.X * Math.PI / 180)
+                    Dim xMat As Matrix = Matrix.RotationX(.Orientation.Z * Math.PI / 180) 'this can be X or Y (uncertain)
+                    Dim yMat As Matrix = Matrix.RotationY(-.Orientation.X * Math.PI / 180) ' this can be X or Y (uncertain)
+                    Dim zMat As Matrix = Matrix.RotationZ(.Orientation.Y * Math.PI / 180) 'this IS z-rot (don't know offset yet)
 
                     Dim rMat As Matrix = xMat * yMat * zMat
                     Dim Rot As Quaternion = Quaternion.RotationMatrix(rMat)
+
+                    Debug.Print("{0} {1} {2} {3}", Rot.X, Rot.Y, Rot.Z, Rot.W)
 
                     myHF.CreateVertexBufferFromM2(MD20, SKIN, Pos, Rot, .Scale)
 

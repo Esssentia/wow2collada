@@ -10,6 +10,13 @@ Namespace FileReaders
 
     Class ADT
 
+        Public Structure sLayer
+            Public TextureID As UInt32
+            Public Flags As UInt32
+            Public AlphaOffset As UInt32
+            Public DetailTextureID As UInt32
+        End Structure
+
         Public Structure sM2Placement
             Public MMDX_ID As UInt32
             Public ID As UInt32
@@ -55,6 +62,8 @@ Namespace FileReaders
             Dim props As UInt32
             Dim effectId As UInt32
             Dim HeightMap As Single()
+            Dim NormalMap As Vector3()
+            Dim Layer As sLayer()
             Dim HeightMap9x9 As Single(,)
             Dim HeightMap8x8 As Single(,)
         End Structure
@@ -130,53 +139,8 @@ Namespace FileReaders
                         Next
 
                     Case "MCNK"
-                        Dim Flags As UInt32 = br.ReadUInt32
-                        Dim IndexX As UInt32 = br.ReadUInt32
-                        Dim IndexY As UInt32 = br.ReadUInt32
-                        With MCNKs(IndexX, IndexY)
-                            .flags = Flags
-                            .nLayers = br.ReadUInt32
-                            .nDoodadRefs = br.ReadUInt32
-                            .offsHeight = br.ReadUInt32
-                            .offsNormal = br.ReadUInt32
-                            .offsLayer = br.ReadUInt32
-                            .offsRefs = br.ReadUInt32
-                            .offsAlpha = br.ReadUInt32
-                            .sizeAlpha = br.ReadUInt32
-                            .offsShadow = br.ReadUInt32
-                            .sizeShadow = br.ReadUInt32
-                            .areaid = br.ReadUInt32
-                            .nMapObjRefs = br.ReadUInt32
-                            .holes = br.ReadUInt32
-                            Dim Unbekannt1 As UInt32 = br.ReadUInt32
-                            Dim Unbekannt2 As UInt32 = br.ReadUInt32
-                            Dim Unbekannt3 As UInt32 = br.ReadUInt32
-                            Dim Unbekannt4 As UInt32 = br.ReadUInt32
-                            .predTex = br.ReadUInt32
-                            .noEffectDoodad = br.ReadUInt32
-                            .offsSndEmitters = br.ReadUInt32
-                            .nSndEmitters = br.ReadUInt32
-                            .offsLiquid = br.ReadUInt32
-                            .sizeLiquid = br.ReadUInt32
-                            .Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            .offsColorValues = br.ReadUInt32
-                            .props = br.ReadUInt32
-                            .effectId = br.ReadUInt32
-
-                            br.BaseStream.Position = FilePosition + .offsHeight
-                            Dim SubChunkId As String = br.ReadChars(4)
-                            SubChunkId = myHF.StrRev(SubChunkId)
-                            Dim SubChunkLen As UInt32 = br.ReadUInt32
-                            If SubChunkId <> "MCVT" Then Debug.Print("Argh...: Expected MCVT sub-chunk, got: " & SubChunkId)
-                            If SubChunkLen <> 145 * 4 Then Debug.Print("Argh...: Expected MCVT sub-chunk of length " & (145 * 4) & ", got: " & SubChunkLen)
-                            ReDim .HeightMap(144)
-
-                            For i As Integer = 0 To 144
-                                .HeightMap(i) = br.ReadSingle
-                            Next
-                            .HeightMap8x8 = GetHeightMap8x8FromHeightMap(.HeightMap)
-                            .HeightMap9x9 = GetHeightMap9x9FromHeightMap(.HeightMap)
-                        End With
+                        LoadMCNK(br)
+                       
 
                     Case "MH2O" 'Water and such...
                         ' do it :)
@@ -192,6 +156,94 @@ Namespace FileReaders
 
             Return True
         End Function
+
+        Private Sub LoadMCNK(ByRef br As BinaryReader)
+            Dim FilePosition As Integer = br.BaseStream.Position - 8
+            Dim Flags As UInt32 = br.ReadUInt32
+            Dim IndexX As UInt32 = br.ReadUInt32
+            Dim IndexY As UInt32 = br.ReadUInt32
+
+            Dim SubChunkId As String
+            Dim SubChunkLen As UInt32
+
+            With MCNKs(IndexX, IndexY)
+
+                .flags = Flags
+                .nLayers = br.ReadUInt32
+                .nDoodadRefs = br.ReadUInt32
+                .offsHeight = br.ReadUInt32
+                .offsNormal = br.ReadUInt32
+                .offsLayer = br.ReadUInt32
+                .offsRefs = br.ReadUInt32
+                .offsAlpha = br.ReadUInt32
+                .sizeAlpha = br.ReadUInt32
+                .offsShadow = br.ReadUInt32
+                .sizeShadow = br.ReadUInt32
+                .areaid = br.ReadUInt32
+                .nMapObjRefs = br.ReadUInt32
+                .holes = br.ReadUInt32
+                Dim Unbekannt1 As UInt32 = br.ReadUInt32
+                Dim Unbekannt2 As UInt32 = br.ReadUInt32
+                Dim Unbekannt3 As UInt32 = br.ReadUInt32
+                Dim Unbekannt4 As UInt32 = br.ReadUInt32
+                .predTex = br.ReadUInt32
+                .noEffectDoodad = br.ReadUInt32
+                .offsSndEmitters = br.ReadUInt32
+                .nSndEmitters = br.ReadUInt32
+                .offsLiquid = br.ReadUInt32
+                .sizeLiquid = br.ReadUInt32
+                .Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                .offsColorValues = br.ReadUInt32
+                .props = br.ReadUInt32
+                .effectId = br.ReadUInt32
+
+                'MCVT subchunk
+                br.BaseStream.Position = FilePosition + .offsHeight
+                SubChunkId = br.ReadChars(4)
+                SubChunkId = myHF.StrRev(SubChunkId)
+                SubChunkLen = br.ReadUInt32
+                If SubChunkId <> "MCVT" Then Debug.Print("Argh...: Expected MCVT subchunk, got: " & SubChunkId)
+                If SubChunkLen <> 145 * 4 Then Debug.Print("Argh...: Expected MCVT subchunk of length " & (145 * 4) & ", got: " & SubChunkLen)
+                ReDim .HeightMap(144)
+
+                For i As Integer = 0 To 144
+                    .HeightMap(i) = br.ReadSingle
+                Next
+                .HeightMap8x8 = GetHeightMap8x8FromHeightMap(.HeightMap)
+                .HeightMap9x9 = GetHeightMap9x9FromHeightMap(.HeightMap)
+
+                'MCNR subchunk
+                br.BaseStream.Position = FilePosition + .offsNormal
+                SubChunkId = br.ReadChars(4)
+                SubChunkId = myHF.StrRev(SubChunkId)
+                SubChunkLen = br.ReadUInt32
+                If SubChunkId <> "MCNR" Then Debug.Print("Argh...: Expected MCNR subchunk, got: " & SubChunkId)
+                If SubChunkLen <> (145 * 3 + 13) Then Debug.Print("Argh...: Expected MCNR subchunk of length " & (145 * 3 + 13) & ", got: " & SubChunkLen)
+                ReDim .NormalMap(144)
+
+                For i As Integer = 0 To 144
+                    .NormalMap(i) = New Vector3(br.ReadSByte / 127, br.ReadSByte / 127, br.ReadSByte / 127)
+                Next
+
+                'MCLY subchunk
+                br.BaseStream.Position = FilePosition + .offsLayer
+                SubChunkId = br.ReadChars(4)
+                SubChunkId = myHF.StrRev(SubChunkId)
+                SubChunkLen = br.ReadUInt32
+                If SubChunkId <> "MCLY" Then Debug.Print("Argh...: Expected MCLY subchunk, got: " & SubChunkId)
+                If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCLY subchunk of length multiple 16, got: " & SubChunkLen)
+                ReDim .Layer(3)
+
+                For i As Integer = 0 To SubChunkLen / 16 - 1
+                    .Layer(i).TextureID = br.ReadInt32
+                    .Layer(i).Flags = br.ReadInt32
+                    .Layer(i).AlphaOffset = br.ReadInt32
+                    .Layer(i).DetailTextureID = br.ReadInt32
+
+                Next
+
+            End With
+        End Sub
 
         Private Function GetHeightMap9x9FromHeightMap(ByVal HeightMap() As Single) As Single(,)
             Dim Out(8, 8) As Single
