@@ -43,6 +43,7 @@ Class render3d
 
     Private m_Textures As New Dictionary(Of String, Texture)
     Private m_Triangles As New List(Of m_Triangle)
+    Private m_DefaultTexture As Texture
 
     Sub Camera_Move(ByVal Direction As Vector3)
         CAM_POSITION += Direction
@@ -150,6 +151,7 @@ Class render3d
         ' Create the initial vertex data.
         CreateTriangleList()
         CreateVertexBuffer()
+        m_DefaultTexture = Texture.FromBitmap(m_Device, My.Resources.DefaultTexture, Usage.None, Pool.Managed)
 
         ' Make the material.
         SetupMaterial()
@@ -191,12 +193,20 @@ Class render3d
         m_Device.VertexFormat = CustomVertex.PositionNormalTextured.Format
 
         Dim lastTex As String = "{--}"
+        Dim currTex As String = ""
 
         For i As Integer = 0 To m_Triangles.Count - 1
             With m_Triangles(i)
-                If .TextureID <> lastTex Then
-                    If .TextureID > "" Then If Not m_Textures Is Nothing Then If m_Textures.ContainsKey(.TextureID) Then m_Device.SetTexture(0, m_Textures(.TextureID))
-                    lastTex = .TextureID
+                currTex = ""
+                If .TextureID > "" Then If Not m_Textures Is Nothing Then If m_Textures.ContainsKey(.TextureID) Then currTex = .TextureID
+
+                If currTex <> lastTex Then
+                    If currTex <> "" Then
+                        m_Device.SetTexture(0, m_Textures(.TextureID))
+                    Else
+                        m_Device.SetTexture(0, m_DefaultTexture)
+                    End If
+                    lastTex = currTex
                 End If
 
                 m_Device.DrawPrimitives(PrimitiveType.TriangleList, i * 3, 1)
