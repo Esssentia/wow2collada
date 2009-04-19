@@ -100,7 +100,7 @@ Public Class OpenWMOOptions
 
         'reset data structures
         myHF.Textures.Clear()
-        myHF.TriangleList.Clear()
+        myHF.SubMeshes.Clear()
 
         'load and parse Sub WMOs
         StatusLabel1.Text = "Loading Sub-WMO... 0/" & _SubWMO.Count
@@ -163,9 +163,25 @@ Public Class OpenWMOOptions
             ProgressBar1.ForeColor = Color.FromArgb(255, 255 - 255 * ProgressBar1.Value / 100, 255 * ProgressBar1.Value / 100, 0)
             Application.DoEvents()
 
+            Dim CurrMatID As Integer = -1
+            Dim submesh As HelperFunctions.sSubMesh
+            submesh.TriangleList = New System.Collections.Generic.List(Of HelperFunctions.sTriangle)
+            submesh.TextureList = New System.Collections.Generic.List(Of HelperFunctions.sTextureEntry)
+
             For j As Integer = 0 To _WMO.SubSets(i).Triangles.Length - 1
                 Dim MatID As Byte = _WMO.SubSets(i).Materials(j)
                 If MatID < _WMO.Textures.Length Then
+
+                    If MatID <> CurrMatID Then
+                        If CurrMatID <> -1 Then myHF.SubMeshes.Add(submesh)
+                        CurrMatID = MatID
+                        submesh.TriangleList = New System.Collections.Generic.List(Of HelperFunctions.sTriangle)
+                        submesh.TextureList = New System.Collections.Generic.List(Of HelperFunctions.sTextureEntry)
+                        Dim texent As HelperFunctions.sTextureEntry
+                        texent.TextureID = _WMO.Textures(MatID)
+                        submesh.TextureList.Add(texent)
+                    End If
+
                     Dim Tri As New HelperFunctions.sTriangle
                     Dim V1 As HelperFunctions.sVertex
                     Dim V2 As HelperFunctions.sVertex
@@ -185,12 +201,14 @@ Public Class OpenWMOOptions
                         V3.UV = _WMO.SubSets(i).Vertices(.VertexIndex3).TextureCoords
 
                         Tri.P = New HelperFunctions.sVertex() {V1, V2, V3}
-                        Tri.TextureID = _WMO.Textures(MatID)
 
-                        myHF.TriangleList.Add(Tri)
+                        submesh.TriangleList.Add(Tri)
+
                     End With
                 End If
             Next
+
+            myHF.SubMeshes.Add(submesh)
         Next
 
         If _WMO.nDoodads > 0 And LoadDoodads.Checked Then
@@ -225,8 +243,8 @@ Public Class OpenWMOOptions
                         Dim SKIN As New FileReaders.SKIN
                         Dim FileNameMD20 As String = .ModelFile.Substring(0, .ModelFile.LastIndexOf(".")) + ".m2"
                         Dim FileNameSKIN As String = .ModelFile.Substring(0, .ModelFile.LastIndexOf(".")) + "00.skin"
-                        MD20.LoadFromStream(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
-                        SKIN.LoadFromStream(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
+                        MD20.Load(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
+                        SKIN.Load(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
                         myHF.CreateVertexBufferFromM2(MD20, SKIN, .Position, .Orientation, .Scale)
                     End If
                 End With

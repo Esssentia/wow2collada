@@ -176,17 +176,17 @@ Namespace FileReaders
                         AlphaValues(0) = a0
                         AlphaValues(1) = a1
                         If AlphaValues(0) > AlphaValues(1) Then
-                            AlphaValues(2) = (6.0 * a0 + 1.0 * a1) / 7.0
-                            AlphaValues(3) = (5.0 * a0 + 2.0 * a1) / 7.0
-                            AlphaValues(4) = (4.0 * a0 + 3.0 * a1) / 7.0
-                            AlphaValues(5) = (3.0 * a0 + 4.0 * a1) / 7.0
-                            AlphaValues(6) = (2.0 * a0 + 5.0 * a1) / 7.0
-                            AlphaValues(7) = (1.0 * a0 + 6.0 * a1) / 7.0
+                            AlphaValues(2) = (6.0F * a0 + 1.0F * a1) / 7.0F
+                            AlphaValues(3) = (5.0F * a0 + 2.0F * a1) / 7.0F
+                            AlphaValues(4) = (4.0F * a0 + 3.0F * a1) / 7.0F
+                            AlphaValues(5) = (3.0F * a0 + 4.0F * a1) / 7.0F
+                            AlphaValues(6) = (2.0F * a0 + 5.0F * a1) / 7.0F
+                            AlphaValues(7) = (1.0F * a0 + 6.0F * a1) / 7.0F
                         Else
-                            AlphaValues(2) = (4.0 * a0 + 1.0 * a1) / 5.0
-                            AlphaValues(3) = (3.0 * a0 + 2.0 * a1) / 5.0
-                            AlphaValues(4) = (2.0 * a0 + 3.0 * a1) / 5.0
-                            AlphaValues(5) = (1.0 * a0 + 4.0 * a1) / 5.0
+                            AlphaValues(2) = (4.0F * a0 + 1.0F * a1) / 5.0F
+                            AlphaValues(3) = (3.0F * a0 + 2.0F * a1) / 5.0F
+                            AlphaValues(4) = (2.0F * a0 + 3.0F * a1) / 5.0F
+                            AlphaValues(5) = (1.0F * a0 + 4.0F * a1) / 5.0F
                             AlphaValues(6) = 0
                             AlphaValues(7) = 255
                         End If

@@ -64,16 +64,17 @@ Namespace FileReaders
             Dim HeightMap As Single()
             Dim NormalMap As Vector3()
             Dim Layer As sLayer()
+            Dim AlphaMaps As Bitmap()
             Dim HeightMap9x9 As Single(,)
             Dim HeightMap8x8 As Single(,)
         End Structure
 
-        Public TextureFiles() As String
-        Public ModelFiles() As String
-        Public WMOFiles() As String
-        Public M2Placements() As sM2Placement
-        Public WMOPlacements() As sWMOPlacement
-        Public MCNKs(,) As sMCNK
+        Public TextureFiles As String()
+        Public ModelFiles As String()
+        Public WMOFiles As String()
+        Public M2Placements As sM2Placement()
+        Public WMOPlacements As sWMOPlacement()
+        Public MCNKs As sMCNK(,)
 
         Public Sub Load(ByVal File As Byte())
             Load(New MemoryStream(File))
@@ -218,7 +219,7 @@ Namespace FileReaders
                 SubChunkId = myHF.StrRev(SubChunkId)
                 SubChunkLen = br.ReadUInt32
                 If SubChunkId <> "MCNR" Then Debug.Print("Argh...: Expected MCNR subchunk, got: " & SubChunkId)
-                If SubChunkLen <> (145 * 3 + 13) Then Debug.Print("Argh...: Expected MCNR subchunk of length " & (145 * 3 + 13) & ", got: " & SubChunkLen)
+                If SubChunkLen <> (145 * 3) Then Debug.Print("Argh...: Expected MCNR subchunk of length " & (145 * 3) & ", got: " & SubChunkLen)
                 ReDim .NormalMap(144)
 
                 For i As Integer = 0 To 144
@@ -239,7 +240,41 @@ Namespace FileReaders
                     .Layer(i).Flags = br.ReadInt32
                     .Layer(i).AlphaOffset = br.ReadInt32
                     .Layer(i).DetailTextureID = br.ReadInt32
+                Next
 
+                'MCAL subchunk
+                br.BaseStream.Position = FilePosition + .offsAlpha
+                SubChunkId = br.ReadChars(4)
+                SubChunkId = myHF.StrRev(SubChunkId)
+                SubChunkLen = br.ReadUInt32
+                If SubChunkId <> "MCAL" Then Debug.Print("Argh...: Expected MCAL subchunk, got: " & SubChunkId)
+                If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCAL subchunk of length multiple 16, got: " & SubChunkLen)
+                ReDim .AlphaMaps(3)
+
+                For i As Integer = 0 To 3
+                    If .Layer(i).TextureID > 0 Then
+                        If .Layer(i).Flags And &H100 Then 'use alpha map
+                            Dim Buffer(2047) As Byte
+                            If .Layer(i).Flags And &H200 Then 'compressed alpha
+                                Dim offO = 0
+                                While offO < 2048
+                                    Dim b1 As Byte = br.ReadByte
+                                    Dim b2 As Byte = br.ReadByte
+                                    Dim fill As Boolean = b1 > 127
+                                    Dim n As Integer = b1 And &H7F
+                                    For k As Integer = 0 To n - 1
+                                        Buffer(offO) = b2
+                                        offO += 1
+                                        If Not fill Then b2 = br.ReadByte
+                                    Next
+                                End While
+                            Else 'uncompressed alpha
+                                Buffer = br.ReadBytes(2048)
+                            End If
+
+                            .AlphaMaps(i) = BytesToAlphaBitmap(Buffer)
+                        End If
+                    End If
                 Next
 
             End With
@@ -299,6 +334,21 @@ Namespace FileReaders
             For r As Integer = 0 To 7
                 For c As Integer = 0 To 7
                     Out(r, c) = HeightMap(9 + r * 17 + c)
+                Next
+            Next
+
+            Return Out
+        End Function
+
+        Private Function BytesToAlphaBitmap(ByVal buffer As Byte())
+            Dim Out As New Bitmap(64, 64, Imaging.PixelFormat.Format32bppArgb)
+
+            For y As Integer = 0 To 63
+                For x As Integer = 0 To 31
+                    Dim b As Byte = buffer(x + y * 32)
+                    Out.SetPixel(x * 2 + 1, y, Color.FromArgb(b And &HF0, 0, 0, 0))
+                    Out.SetPixel(x * 2, y, Color.FromArgb(b << 4 And &HF0, 0, 0, 0))
+                    'Debug.Print((x + y * 32) & " " & x & " " & y)
                 Next
             Next
 

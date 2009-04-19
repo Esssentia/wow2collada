@@ -5,7 +5,7 @@
 Class HelperFunctions
 
     Public Textures As New System.Collections.Generic.Dictionary(Of String, sTexture)
-    Public TriangleList As New System.Collections.Generic.List(Of sTriangle)
+    Public SubMeshes As New System.Collections.Generic.List(Of sSubMesh)
 
     ''' <summary>
     ''' Structure to hold Texture information (Bitmap, TextureObject and Filename)
@@ -13,8 +13,8 @@ Class HelperFunctions
     ''' <remarks>The TextureObject is dependent on the Direct3D device, so if the device changes, the textures have to be recalculated!</remarks>
     Public Structure sTexture
         Dim TexGra As Bitmap
-        Dim TexObj As Texture
         Dim ID As String
+        Dim OpenGLTexID As Integer
     End Structure
 
     ''' <summary>
@@ -32,8 +32,23 @@ Class HelperFunctions
     ''' </summary>
     ''' <remarks></remarks>
     Public Structure sTriangle
-        Dim TextureID As String
         Dim P() As sVertex
+    End Structure
+
+    Public Structure sTextureEntry
+        Dim TextureID As String
+        Dim Flags As Integer
+        Dim Blending As Integer
+    End Structure
+
+    ''' <summary>
+    ''' Structure to hold Submesh information (Trianglelist + Textures)
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Structure sSubMesh
+        Dim TextureList As System.Collections.Generic.List(Of sTextureEntry)
+        Dim OpenGLMeshID As Integer
+        Dim TriangleList As System.Collections.Generic.List(Of sTriangle)
     End Structure
 
     ''' <summary>
@@ -42,6 +57,10 @@ Class HelperFunctions
     ''' <remarks></remarks>
     Sub New()
         Dim Tri As New sTriangle
+        Dim SubMesh As New sSubMesh
+        SubMesh.TriangleList = New System.Collections.Generic.List(Of sTriangle)
+        SubMesh.TextureList = New System.Collections.Generic.List(Of sTextureEntry)
+
         Tri.P = New sVertex() {New sVertex, New sVertex, New sVertex}
         Tri.P(0).Position = New Vector3(0, 0, 1)
         Tri.P(1).Position = New Vector3(0, 1, 0)
@@ -49,7 +68,9 @@ Class HelperFunctions
         Tri.P(0).Normal = New Vector3(1, 1, 1)
         Tri.P(1).Normal = New Vector3(1, 1, 1)
         Tri.P(2).Normal = New Vector3(1, 1, 1)
-        TriangleList.Add(Tri)
+
+        SubMesh.TriangleList.Add(Tri)
+        SubMeshes.Add(SubMesh)
     End Sub
 
     ''' <summary>
@@ -95,7 +116,7 @@ Class HelperFunctions
     ''' <param name="Pos">The position to start the string at</param>
     ''' <returns>The extracted string</returns>
     ''' <remarks></remarks>
-    Public Function GetZeroDelimitedStringFromBinaryReader(ByRef br As System.IO.BinaryReader, ByVal Pos As UInt32) As String
+    Public Function GetZeroDelimitedString(ByRef br As System.IO.BinaryReader, ByVal Pos As UInt32) As String
         Dim out As String = ""
         Dim c As Char
 
@@ -104,6 +125,26 @@ Class HelperFunctions
         While Asc(c) <> 0
             out &= c
             c = br.ReadChar
+        End While
+
+        Return out.Trim
+    End Function
+
+    ''' <summary>
+    ''' Returns a zero delimited string from a stream starting at the current position
+    ''' </summary>
+    ''' <param name="st">The stream to use as the source</param>
+    ''' <returns>The extracted string</returns>
+    ''' <remarks></remarks>
+    Public Function GetZeroDelimitedString(ByRef st As IO.Stream) As String
+        Dim out As String = ""
+        Dim c As Byte
+
+
+        c = st.ReadByte
+        While c <> 0
+            out &= Chr(c)
+            c = st.ReadByte
         End While
 
         Return out.Trim
@@ -201,15 +242,16 @@ Class HelperFunctions
         Select Case FileName.Substring(FileName.LastIndexOf(".") + 1).ToLower
             Case "m2", "mdx"
                 'clear triangle and texture lists
+                
                 Textures.Clear()
-                TriangleList.Clear()
+                SubMeshes.Clear()
 
                 Dim MD20 As New FileReaders.M2
                 Dim SKIN As New FileReaders.SKIN
                 Dim FileNameMD20 As String = FileName.Substring(0, FileName.LastIndexOf(".")) + ".m2"
                 Dim FileNameSKIN As String = FileName.Substring(0, FileName.LastIndexOf(".")) + "00.skin"
-                MD20.LoadFromStream(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
-                SKIN.LoadFromStream(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
+                MD20.Load(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
+                SKIN.Load(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
 
                 CreateVertexBufferFromM2(MD20, SKIN, New Vector3(0, 0, 0), New Quaternion(0, 0, 0, 0), 1) 'textured
 
@@ -228,12 +270,16 @@ Class HelperFunctions
                 out.Add("SKIN Submeshes: " & SKIN.SubMeshes.Length)
 
                 For i As Integer = 0 To SKIN.SubMeshes.Length - 1
-                    out.Add(" Submesh " & i & " [SubID=" & SKIN.SubMeshes(i).ID & "]: Bones:" & SKIN.SubMeshes(i).nBones & ", Tris: " & SKIN.SubMeshes(i).nTriangles & ", Verts: " & SKIN.SubMeshes(i).nVertices & ")")
+                    Dim TexID As Integer = -1
+                    For j As Integer = 0 To SKIN.TextureUnits.Length - 1
+                        If SKIN.TextureUnits(j).SubmeshIndex1 = i Then TexID = MD20.TextureLookup(SKIN.TextureUnits(j).Texture)
+                    Next
+                    out.Add(String.Format(" Submesh {0} [SubID={1}: Bones={2}, Tris={3}, Verts={4}, TexID={5} ({6})]", i, SKIN.SubMeshes(i).ID, SKIN.SubMeshes(i).nBones, SKIN.SubMeshes(i).nTriangles, SKIN.SubMeshes(i).nVertices, TexID, "")) 'Textures.ElementAt(TexID).Key))
                 Next
 
                 For i As Integer = 0 To Textures.Count - 1
                     With Textures.ElementAt(i).Value
-                        out.Add(" Texture [" & .ID & "]")
+                        out.Add(String.Format(" Texture [{0}] -> [{1}]", .ID, myMPQ.LocateMPQ(.ID)))
                     End With
                 Next
 
@@ -254,8 +300,8 @@ Class HelperFunctions
         End Select
 
         ' tranfer the data to the 3D subsystem
-        render.ResetView()
-        render.SetupScene()
+        'frm3D.ResetView()
+        frmOG.ResetView()
 
         Return out
     End Function
@@ -275,48 +321,94 @@ Class HelperFunctions
         'scale (done below) -> rot (done through matrix) -> trans (done below)
         Dim rMat As Matrix = Matrix.RotationQuaternion(Orientation)
 
-        'Debug.Print(String.Format("{0} {1} {2} {3}", Orientation.X, Orientation.Y, Orientation.Z, Orientation.W))
-
         If Not SKIN.SubMeshes Is Nothing Then
-            For i As Integer = 0 To SKIN.SubMeshes.Length - 1
-                Dim TexID As Integer = -1
-                For j As Integer = 0 To SKIN.TextureUnits.Length - 1
-                    If SKIN.TextureUnits(j).SubmeshIndex1 = i Then TexID = MD20.TextureLookup(SKIN.TextureUnits(j).Texture)
-                Next
 
-                Dim TexFi As String = MD20.Textures(TexID).Filename
-                If myMPQ.Locate(TexFi) Then
-                    If Not Textures.ContainsKey(TexFi) Then
-                        Dim Tex As New HelperFunctions.sTexture
-                        Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                        If Not TexImg Is Nothing Then
-                            Tex.ID = TexFi
-                            Tex.TexGra = TexImg
-                            Textures(TexFi) = Tex
+            For i As Integer = 0 To SKIN.SubMeshes.Length - 1
+
+                Dim submesh As sSubMesh
+                submesh.TriangleList = New System.Collections.Generic.List(Of sTriangle)
+                submesh.TextureList = New System.Collections.Generic.List(Of sTextureEntry)
+
+                For j As Integer = 0 To SKIN.TextureUnits.Length - 1
+                    If SKIN.TextureUnits(j).SubmeshIndex1 = i Then
+                        Dim TexID As String = MD20.TextureLookup(SKIN.TextureUnits(j).Texture)
+                        Dim TexFi As String = MD20.Textures(TexID).Filename
+
+                        If myMPQ.Locate(TexFi) Then
+                            If Not Textures.ContainsKey(TexFi) Then
+                                Dim Tex As New HelperFunctions.sTexture
+                                Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
+                                If Not TexImg Is Nothing Then
+                                    Tex.ID = TexFi
+                                    Tex.TexGra = TexImg
+                                    Textures(TexFi) = Tex
+                                End If
+                            End If
+                            Dim texent As sTextureEntry
+                            texent.TextureID = TexFi
+                            texent.Blending = MD20.RenderFlags(SKIN.TextureUnits(j).RenderFlags).Blending
+                            texent.Flags = MD20.RenderFlags(SKIN.TextureUnits(j).RenderFlags).Flags
+                            submesh.TextureList.Add(texent)
                         End If
                     End If
+                Next
 
-                    For j As Integer = 0 To SKIN.SubMeshes(i).nTriangles - 1
-                        Dim k As Integer = SKIN.SubMeshes(i).StartTriangle + j
-                        With SKIN.Triangles(k)
-                            Dim Tri As New HelperFunctions.sTriangle
-                            Dim V As HelperFunctions.sVertex() = New HelperFunctions.sVertex() {New HelperFunctions.sVertex, New HelperFunctions.sVertex, New HelperFunctions.sVertex}
+                For j As Integer = 0 To SKIN.SubMeshes(i).nTriangles - 1
+                    Dim k As Integer = SKIN.SubMeshes(i).StartTriangle + j
+                    With SKIN.Triangles(k)
+                        Dim Tri As New HelperFunctions.sTriangle
+                        Dim V As HelperFunctions.sVertex() = New HelperFunctions.sVertex() {New HelperFunctions.sVertex, New HelperFunctions.sVertex, New HelperFunctions.sVertex}
 
-                            For m = 0 To 2
-                                V(m).Position = Vector3.TransformCoordinate(MD20.Vertices(.VertexIndex(m)).Position * Scale, rMat) + Position
-                                V(m).Normal = Vector3.TransformCoordinate(MD20.Vertices(.VertexIndex(m)).Normal, rMat)
-                                V(m).UV = MD20.Vertices(.VertexIndex(m)).TextureCoords
-                                'Debug.Print("pre {0} {1} {2} -- pos {3} {4} {5}", MD20.Vertices(.VertexIndex(m)).Position.X, MD20.Vertices(.VertexIndex(m)).Position.Y, MD20.Vertices(.VertexIndex(m)).Position.Z, V(m).Position.X, V(m).Position.Y, V(m).Position.Z)
-                            Next
+                        For m = 0 To 2
+                            V(m).Position = Vector3.TransformCoordinate(MD20.Vertices(.VertexIndex(m)).Position * Scale, rMat) + Position
+                            V(m).Normal = Vector3.TransformCoordinate(MD20.Vertices(.VertexIndex(m)).Normal, rMat)
+                            V(m).UV = MD20.Vertices(.VertexIndex(m)).TextureCoords
+                        Next
 
-                            Tri.P = V
-                            Tri.TextureID = TexFi
-                            TriangleList.Add(Tri)
-                        End With
-                    Next
-                End If
+                        Tri.P = V
+                        submesh.TriangleList.Add(Tri)
+                    End With
+                Next
+
+                SubMeshes.Add(submesh)
+
             Next
         End If
     End Sub
+
+
+    Public Function CombineBitmaps(ByVal Canvas As Bitmap, ByVal Brush As Bitmap)
+        Dim xf As Single = Brush.Width / Canvas.Width
+        Dim yf As Single = Brush.Height / Canvas.Height
+
+        For x = 0 To Canvas.Width - 1
+            For y = 0 To Canvas.Height - 1
+                Dim cCol As Color = Canvas.GetPixel(x, y)
+                Dim nCol As Color = Brush.GetPixel(Math.Floor(x * xf), Math.Floor(y * yf))
+                Canvas.SetPixel(x, y, Color.FromArgb(cCol.A, cCol.R * (1 - nCol.A / 255) + nCol.R * (nCol.A / 255), cCol.G * (1 - nCol.A / 255) + nCol.G * (nCol.A / 255), cCol.B * (1 - nCol.A / 255) + nCol.B * (nCol.A / 255)))
+            Next
+        Next
+
+        Return Canvas
+    End Function
+
+    Public Function ShortToSingle(ByVal i As UInt16) As Single
+        Dim sign As Integer = (i >> 15 And 1) * 2 - 1
+        Dim exponent As Integer = (i >> 10 And &H1F) - 15
+        Dim significand As Integer = (i And &H3FF)
+        Dim out As Single = 1.0F * sign * significand * 10 ^ exponent
+        'Debug.Print(String.Format("{0} {1} {2} {3}", sign, exponent, significand, out))
+
+    End Function
+
+    Public Function CatchOverflow(ByVal i As Long) As Integer
+        Dim o As Integer
+        If i > (2 ^ 16 - 1) Then
+            o = -1
+        Else
+            o = i
+        End If
+        Return o
+    End Function
 
 End Class

@@ -181,7 +181,7 @@ Partial Class OpenWMOOptions
         'StatusLabel1
         '
         Me.StatusLabel1.Name = "StatusLabel1"
-        Me.StatusLabel1.Size = New System.Drawing.Size(654, 17)
+        Me.StatusLabel1.Size = New System.Drawing.Size(685, 17)
         Me.StatusLabel1.Spring = True
         Me.StatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '

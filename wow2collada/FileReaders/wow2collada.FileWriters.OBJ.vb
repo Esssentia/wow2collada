@@ -6,15 +6,15 @@ Namespace FileWriters
 
     Class OBJ
 
-        Public Function Save(ByVal Filename As String, ByRef Triangles As List(Of HelperFunctions.sTriangle), ByRef Textures As Dictionary(Of String, HelperFunctions.sTexture)) As Boolean
+        Public Function Save(ByVal Filename As String, ByRef SubMeshes As List(Of HelperFunctions.sSubMesh), ByRef Textures As Dictionary(Of String, HelperFunctions.sTexture)) As Boolean
             'Save everything as OBJ...
             Dim OBJFile As String
             Dim MTLFile As String
             Dim TEXFile As String
             Dim BasePath As String
             Dim Lines As New List(Of String)
-            Dim CurrMat As String = ""
-            Dim GroupNumber As Integer = 1
+            Dim CurrIdx As Integer
+            Dim CurrGrp As Integer
 
             BasePath = myHF.GetBasePath(Filename)
             OBJFile = BasePath & "\" & myHF.GetBaseName(Filename) & ".obj"
@@ -95,48 +95,54 @@ Namespace FileWriters
             Lines.Add("")
 
             'all vertices first
-            For i As Integer = 0 To Triangles.Count - 1
-                For j As Integer = 0 To 2
-                    Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", Triangles(i).P(j).Position.X, Triangles(i).P(j).Position.Y, Triangles(i).P(j).Position.Z))
+            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
+                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
+                    For j As Integer = 0 To 2
+                        Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", triangle.P(j).Position.X, triangle.P(j).Position.Y, triangle.P(j).Position.Z))
+                    Next
                 Next
             Next
 
             Lines.Add("")
 
             'now vertex normals
-            For i As Integer = 0 To Triangles.Count - 1
-                For j As Integer = 0 To 2
-                    Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", Triangles(i).P(j).Normal.X, Triangles(i).P(j).Normal.Y, Triangles(i).P(j).Normal.Z))
+            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
+                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
+                    For j As Integer = 0 To 2
+                        Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", triangle.P(j).Normal.X, triangle.P(j).Normal.Y, triangle.P(j).Normal.Z))
+                    Next
                 Next
             Next
 
             Lines.Add("")
 
             'now texture coordinates
-            For i As Integer = 0 To Triangles.Count - 1
-                For j As Integer = 0 To 2
-                    Lines.Add(String.Format("vt {0:f6} {1:f6}", Triangles(i).P(j).UV.X, 1 - Triangles(i).P(j).UV.Y)) ' don't ask^^
+            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
+                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
+                    For j As Integer = 0 To 2
+                        Lines.Add(String.Format("vt {0:f6} {1:f6}", triangle.P(j).UV.X, 1 - triangle.P(j).UV.Y)) ' don't ask^^
+                    Next
                 Next
             Next
 
             Lines.Add("")
 
             'now triangles with groups and materials
-            For i As Integer = 0 To Triangles.Count - 1
-                With Triangles(i)
-                    If myHF.GetBaseName(.TextureID) <> CurrMat Then
-                        Lines.Add("")
-                        Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(.TextureID))))
-                        Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.TextureID))))
-                        Lines.Add(String.Format("s {0}", GroupNumber))
-                        CurrMat = myHF.GetBaseName(.TextureID)
-                        GroupNumber += 1
-                    End If
+            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
 
-                    Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", i * 3 + 1, i * 3 + 2, i * 3 + 3))
-                End With
+                CurrGrp += 1
+
+                Lines.Add("")
+                Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(submesh.TextureList(0).TextureID))))
+                Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(submesh.TextureList(0).TextureID))))
+                Lines.Add(String.Format("s {0}", CurrGrp))
+
+                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
+                    CurrIdx += 1
+                    Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", CurrIdx * 3, CurrIdx * 3 + 1, CurrIdx * 3 + 2))
+                Next
+
             Next
-
             File.WriteAllLines(OBJFile, Lines.ToArray)
 
         End Function

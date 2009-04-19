@@ -1,5 +1,5 @@
 <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class RenderForm
+Partial Class MainForm
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -25,21 +25,11 @@ Partial Class RenderForm
         Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator
         Me.SaveAsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.QuitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.EditToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.ViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.DisplayToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.SolidToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.WireframeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.VerticesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.ResetViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
-        Me.RotateToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.StatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
         Me.ProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
         Me.SplitContainer2 = New System.Windows.Forms.SplitContainer
-        Me.SplitContainer1 = New System.Windows.Forms.SplitContainer
         Me.FileList = New System.Windows.Forms.TreeView
-        Me.pic3d = New System.Windows.Forms.PictureBox
         Me.SplitContainer3 = New System.Windows.Forms.SplitContainer
         Me.ListBox1 = New System.Windows.Forms.ListBox
         Me.TextureBox = New System.Windows.Forms.PictureBox
@@ -58,10 +48,6 @@ Partial Class RenderForm
         Me.SplitContainer2.Panel1.SuspendLayout()
         Me.SplitContainer2.Panel2.SuspendLayout()
         Me.SplitContainer2.SuspendLayout()
-        Me.SplitContainer1.Panel1.SuspendLayout()
-        Me.SplitContainer1.Panel2.SuspendLayout()
-        Me.SplitContainer1.SuspendLayout()
-        CType(Me.pic3d, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer3.Panel1.SuspendLayout()
         Me.SplitContainer3.Panel2.SuspendLayout()
         Me.SplitContainer3.SuspendLayout()
@@ -73,7 +59,7 @@ Partial Class RenderForm
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.EditToolStripMenuItem, Me.ViewToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(1162, 24)
@@ -103,60 +89,6 @@ Partial Class RenderForm
         Me.QuitToolStripMenuItem.Name = "QuitToolStripMenuItem"
         Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
         Me.QuitToolStripMenuItem.Text = "Quit"
-        '
-        'EditToolStripMenuItem
-        '
-        Me.EditToolStripMenuItem.Name = "EditToolStripMenuItem"
-        Me.EditToolStripMenuItem.Size = New System.Drawing.Size(39, 20)
-        Me.EditToolStripMenuItem.Text = "Edit"
-        '
-        'ViewToolStripMenuItem
-        '
-        Me.ViewToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DisplayToolStripMenuItem, Me.ResetViewToolStripMenuItem, Me.RotateToolStripMenuItem})
-        Me.ViewToolStripMenuItem.Name = "ViewToolStripMenuItem"
-        Me.ViewToolStripMenuItem.Size = New System.Drawing.Size(44, 20)
-        Me.ViewToolStripMenuItem.Text = "View"
-        '
-        'DisplayToolStripMenuItem
-        '
-        Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.SolidToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.VerticesToolStripMenuItem})
-        Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
-        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
-        Me.DisplayToolStripMenuItem.Text = "Display"
-        '
-        'SolidToolStripMenuItem
-        '
-        Me.SolidToolStripMenuItem.Checked = True
-        Me.SolidToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.SolidToolStripMenuItem.Name = "SolidToolStripMenuItem"
-        Me.SolidToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.SolidToolStripMenuItem.Text = "Solid"
-        '
-        'WireframeToolStripMenuItem
-        '
-        Me.WireframeToolStripMenuItem.Name = "WireframeToolStripMenuItem"
-        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.WireframeToolStripMenuItem.Text = "Wireframe"
-        '
-        'VerticesToolStripMenuItem
-        '
-        Me.VerticesToolStripMenuItem.Name = "VerticesToolStripMenuItem"
-        Me.VerticesToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.VerticesToolStripMenuItem.Text = "Vertices"
-        '
-        'ResetViewToolStripMenuItem
-        '
-        Me.ResetViewToolStripMenuItem.Name = "ResetViewToolStripMenuItem"
-        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
-        Me.ResetViewToolStripMenuItem.Text = "Reset View"
-        '
-        'RotateToolStripMenuItem
-        '
-        Me.RotateToolStripMenuItem.Checked = True
-        Me.RotateToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.RotateToolStripMenuItem.Name = "RotateToolStripMenuItem"
-        Me.RotateToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
-        Me.RotateToolStripMenuItem.Text = "Rotate"
         '
         'StatusStrip1
         '
@@ -190,48 +122,22 @@ Partial Class RenderForm
         '
         'SplitContainer2.Panel1
         '
-        Me.SplitContainer2.Panel1.Controls.Add(Me.SplitContainer1)
+        Me.SplitContainer2.Panel1.Controls.Add(Me.FileList)
         '
         'SplitContainer2.Panel2
         '
         Me.SplitContainer2.Panel2.Controls.Add(Me.SplitContainer3)
         Me.SplitContainer2.Size = New System.Drawing.Size(1162, 609)
-        Me.SplitContainer2.SplitterDistance = 764
+        Me.SplitContainer2.SplitterDistance = 596
         Me.SplitContainer2.TabIndex = 18
-        '
-        'SplitContainer1
-        '
-        Me.SplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer1.Location = New System.Drawing.Point(0, 0)
-        Me.SplitContainer1.Name = "SplitContainer1"
-        '
-        'SplitContainer1.Panel1
-        '
-        Me.SplitContainer1.Panel1.Controls.Add(Me.FileList)
-        '
-        'SplitContainer1.Panel2
-        '
-        Me.SplitContainer1.Panel2.Controls.Add(Me.pic3d)
-        Me.SplitContainer1.Size = New System.Drawing.Size(764, 609)
-        Me.SplitContainer1.SplitterDistance = 254
-        Me.SplitContainer1.TabIndex = 18
         '
         'FileList
         '
         Me.FileList.Dock = System.Windows.Forms.DockStyle.Fill
         Me.FileList.Location = New System.Drawing.Point(0, 0)
         Me.FileList.Name = "FileList"
-        Me.FileList.Size = New System.Drawing.Size(254, 609)
-        Me.FileList.TabIndex = 16
-        '
-        'pic3d
-        '
-        Me.pic3d.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.pic3d.Location = New System.Drawing.Point(0, 0)
-        Me.pic3d.Name = "pic3d"
-        Me.pic3d.Size = New System.Drawing.Size(506, 609)
-        Me.pic3d.TabIndex = 2
-        Me.pic3d.TabStop = False
+        Me.FileList.Size = New System.Drawing.Size(596, 609)
+        Me.FileList.TabIndex = 19
         '
         'SplitContainer3
         '
@@ -248,7 +154,7 @@ Partial Class RenderForm
         '
         Me.SplitContainer3.Panel2.Controls.Add(Me.TextureBox)
         Me.SplitContainer3.Panel2.Controls.Add(Me.TrackBar1)
-        Me.SplitContainer3.Size = New System.Drawing.Size(394, 609)
+        Me.SplitContainer3.Size = New System.Drawing.Size(562, 609)
         Me.SplitContainer3.SplitterDistance = 304
         Me.SplitContainer3.TabIndex = 18
         '
@@ -258,7 +164,7 @@ Partial Class RenderForm
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.Location = New System.Drawing.Point(0, 0)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(394, 303)
+        Me.ListBox1.Size = New System.Drawing.Size(562, 303)
         Me.ListBox1.TabIndex = 11
         '
         'TextureBox
@@ -268,7 +174,7 @@ Partial Class RenderForm
         Me.TextureBox.Dock = System.Windows.Forms.DockStyle.Fill
         Me.TextureBox.Location = New System.Drawing.Point(0, 0)
         Me.TextureBox.Name = "TextureBox"
-        Me.TextureBox.Size = New System.Drawing.Size(394, 276)
+        Me.TextureBox.Size = New System.Drawing.Size(562, 276)
         Me.TextureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.TextureBox.TabIndex = 19
         Me.TextureBox.TabStop = False
@@ -298,7 +204,7 @@ Partial Class RenderForm
         Me.TrackBar1.LargeChange = 1
         Me.TrackBar1.Location = New System.Drawing.Point(0, 276)
         Me.TrackBar1.Name = "TrackBar1"
-        Me.TrackBar1.Size = New System.Drawing.Size(394, 25)
+        Me.TrackBar1.Size = New System.Drawing.Size(562, 25)
         Me.TrackBar1.TabIndex = 18
         '
         'TextureSaveFile
@@ -328,7 +234,7 @@ Partial Class RenderForm
         'SaveModelDialog
         '
         '
-        'RenderForm
+        'MainForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
@@ -336,10 +242,9 @@ Partial Class RenderForm
         Me.Controls.Add(Me.SplitContainer2)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.MenuStrip1)
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow
         Me.KeyPreview = True
         Me.MainMenuStrip = Me.MenuStrip1
-        Me.Name = "RenderForm"
+        Me.Name = "MainForm"
         Me.Text = "wow2collada"
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()
@@ -348,10 +253,6 @@ Partial Class RenderForm
         Me.SplitContainer2.Panel1.ResumeLayout(False)
         Me.SplitContainer2.Panel2.ResumeLayout(False)
         Me.SplitContainer2.ResumeLayout(False)
-        Me.SplitContainer1.Panel1.ResumeLayout(False)
-        Me.SplitContainer1.Panel2.ResumeLayout(False)
-        Me.SplitContainer1.ResumeLayout(False)
-        CType(Me.pic3d, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer3.Panel1.ResumeLayout(False)
         Me.SplitContainer3.Panel2.ResumeLayout(False)
         Me.SplitContainer3.ResumeLayout(False)
@@ -367,19 +268,9 @@ Partial Class RenderForm
     Friend WithEvents FileToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripSeparator1 As System.Windows.Forms.ToolStripSeparator
     Friend WithEvents QuitToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents EditToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents ViewToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents DisplayToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents SolidToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents WireframeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
-    Friend WithEvents VerticesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents StatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
-    Friend WithEvents ResetViewToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SplitContainer2 As System.Windows.Forms.SplitContainer
-    Friend WithEvents SplitContainer1 As System.Windows.Forms.SplitContainer
-    Friend WithEvents FileList As System.Windows.Forms.TreeView
-    Friend WithEvents pic3d As System.Windows.Forms.PictureBox
     Friend WithEvents SplitContainer3 As System.Windows.Forms.SplitContainer
     Friend WithEvents ListBox1 As System.Windows.Forms.ListBox
     Friend WithEvents TrackBar1 As System.Windows.Forms.TrackBar
@@ -395,6 +286,6 @@ Partial Class RenderForm
     Friend WithEvents ProgressBar1 As System.Windows.Forms.ToolStripProgressBar
     Friend WithEvents SaveAsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SaveModelDialog As System.Windows.Forms.SaveFileDialog
-    Friend WithEvents RotateToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents FileList As System.Windows.Forms.TreeView
 
 End Class
