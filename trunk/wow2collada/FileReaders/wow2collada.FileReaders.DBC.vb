@@ -10,14 +10,14 @@ Namespace FileReaders
 
     Class DBC
 
-        Public Structure CreatureModelDataStructure
+        Public Structure sCreatureModelData
             Dim ModelID As UInt32
             Dim CreatureType As UInt32
             Dim ModelFilename As String
             Dim StringOffset As UInt32
         End Structure
 
-        Public Structure CreatureDisplayInfoStructure
+        Public Structure sCreatureDisplayInfo
             Dim CreatureID As UInt32
             Dim CreatureModelID As UInt32
             Dim Scale As Single
@@ -29,31 +29,57 @@ Namespace FileReaders
             Dim Texture13 As String
         End Structure
 
-        Public CreatureModelData As CreatureModelDataStructure()
-        Public CreatureDisplayInfo As CreatureDisplayInfoStructure()
+        Public Structure sGroundEffectTexture
+            Dim EffectDoodad1 As UInt32
+            Dim EffectDoodad2 As UInt32
+            Dim EffectDoodad3 As UInt32
+            Dim EffectDoodad4 As UInt32
+            Dim Density As Integer
+        End Structure
 
-        Public Function LoadCreatureModelData(ByVal FileName As String) As Boolean
-            Return LoadCreatureModelDataFromStream(File.OpenRead(FileName), FileName)
+        Public Structure sAnimationData
+            Dim ID As Integer
+            Dim Name As String
+            Dim WeaponState As Integer
+            Dim Flags As Integer
+            Dim Preceeding As Integer
+            Dim RealID As Integer
+            Dim Group As Integer
+        End Structure
+
+        Public Structure sGroundEffectDoodad
+            Dim DoodadID As Integer
+            Dim DoodadModel As String
+        End Structure
+
+        Public CreatureModelData As sCreatureModelData()
+        Public CreatureDisplayInfo As sCreatureDisplayInfo()
+        Public GroundEffectTexture As sGroundEffectTexture()
+        Public GroundEffectDoodad As sGroundEffectDoodad()
+        Public AnimationData As sAnimationData()
+
+        Public Function LoadBaseDBCs() As Boolean
+            Dim Ret As Boolean = True
+            Ret = Ret And LoadCreatureModelData()
+            Ret = Ret And LoadCreatureDisplayInfo()
+            Ret = Ret And LoadGroundEffectTexture()
+            Ret = Ret And LoadGroundEffectDoodad()
+            Ret = Ret And LoadAnimationData()
+            Return Ret
         End Function
 
-        Public Function LoadCreatureModelDataFromStream(ByRef File As Stream, ByVal FileName As String)
-            Dim br As New BinaryReader(File)
+        Private Function LoadCreatureModelData()
+            Dim FileName As String = "DBFilesClient\CreatureModelData.dbc"
+            If Not myMPQ.Locate(FileName) Then Return False
 
-            If br.ReadChars(4) <> "WDBC" Then
-                File.Close()
-                Return False
-            End If
+            Dim br As New BinaryReader(myMPQ.LoadFile(FileName))
 
+            If br.ReadChars(4) <> "WDBC" Then Return False
 
             Dim nRecords As UInt32 = br.ReadUInt32
             Dim nFields As UInt32 = br.ReadUInt32
             Dim recordSize As UInt32 = br.ReadUInt32
             Dim stringSize As UInt32 = br.ReadUInt32
-
-            'Debug.Print(nRecords)
-            'Debug.Print(nFields)
-            'Debug.Print(recordSize)
-            'Debug.Print(stringSize)
 
             ReDim CreatureModelData(nRecords - 1)
 
@@ -65,35 +91,25 @@ Namespace FileReaders
             Next
 
             For i As Integer = 0 To nRecords - 1
-                CreatureModelData(i).ModelFilename = myHF.GetZeroDelimitedStringFromBinaryReader(br, CreatureModelData(i).StringOffset + 20 + nRecords * recordSize).Replace(".mdx", ".m2")
+                CreatureModelData(i).ModelFilename = myHF.GetZeroDelimitedString(br, CreatureModelData(i).StringOffset + 20 + nRecords * recordSize).Replace(".mdx", ".m2")
                 'Debug.Print(Creaturemodeldata(i).ModelFilename)
             Next
 
-            File.Close()
             Return True
         End Function
 
-        Public Function LoadCreatureDisplayInfo(ByVal FileName As String) As Boolean
-            Return LoadCreatureDisplayInfoFromStream(File.OpenRead(FileName), FileName)
-        End Function
+        Private Function LoadCreatureDisplayInfo()
+            Dim FileName As String = "DBFilesClient\CreatureDisplayInfo.dbc"
+            If Not myMPQ.Locate(FileName) Then Return False
 
-        Public Function LoadCreatureDisplayInfoFromStream(ByRef File As Stream, ByVal FileName As String)
-            Dim br As New BinaryReader(File)
+            Dim br As New BinaryReader(myMPQ.LoadFile(FileName))
 
-            If br.ReadChars(4) <> "WDBC" Then
-                File.Close()
-                Return False
-            End If
+            If br.ReadChars(4) <> "WDBC" Then Return False
 
             Dim nRecords As UInt32 = br.ReadUInt32
             Dim nFields As UInt32 = br.ReadUInt32
             Dim recordSize As UInt32 = br.ReadUInt32
             Dim stringSize As UInt32 = br.ReadUInt32
-
-            'Debug.Print(nRecords)
-            'Debug.Print(nFields)
-            'Debug.Print(recordSize)
-            'Debug.Print(stringSize)
 
             ReDim CreatureDisplayInfo(nRecords - 1)
 
@@ -111,12 +127,100 @@ Namespace FileReaders
             Next
 
             For i As Integer = 0 To nRecords - 1
-                If CreatureDisplayInfo(i).StringOffset11 > 0 Then CreatureDisplayInfo(i).Texture11 = myHF.GetZeroDelimitedStringFromBinaryReader(br, CreatureDisplayInfo(i).StringOffset11 + 20 + nRecords * recordSize)
-                If CreatureDisplayInfo(i).StringOffset12 > 0 Then CreatureDisplayInfo(i).Texture12 = myHF.GetZeroDelimitedStringFromBinaryReader(br, CreatureDisplayInfo(i).StringOffset12 + 20 + nRecords * recordSize)
-                If CreatureDisplayInfo(i).StringOffset13 > 0 Then CreatureDisplayInfo(i).Texture13 = myHF.GetZeroDelimitedStringFromBinaryReader(br, CreatureDisplayInfo(i).StringOffset13 + 20 + nRecords * recordSize)
+                If CreatureDisplayInfo(i).StringOffset11 > 0 Then CreatureDisplayInfo(i).Texture11 = myHF.GetZeroDelimitedString(br, CreatureDisplayInfo(i).StringOffset11 + 20 + nRecords * recordSize)
+                If CreatureDisplayInfo(i).StringOffset12 > 0 Then CreatureDisplayInfo(i).Texture12 = myHF.GetZeroDelimitedString(br, CreatureDisplayInfo(i).StringOffset12 + 20 + nRecords * recordSize)
+                If CreatureDisplayInfo(i).StringOffset13 > 0 Then CreatureDisplayInfo(i).Texture13 = myHF.GetZeroDelimitedString(br, CreatureDisplayInfo(i).StringOffset13 + 20 + nRecords * recordSize)
             Next
 
-            File.Close()
+            Return True
+        End Function
+
+        Private Function LoadGroundEffectTexture()
+            Dim FileName As String = "DBFilesClient\GroundEffectTexture.dbc"
+            If Not myMPQ.Locate(FileName) Then Return False
+
+            Dim br As New BinaryReader(myMPQ.LoadFile(FileName))
+
+            If br.ReadChars(4) <> "WDBC" Then Return False
+
+            Dim nRecords As UInt32 = br.ReadUInt32
+            Dim nFields As UInt32 = br.ReadUInt32
+            Dim recordSize As UInt32 = br.ReadUInt32
+            Dim stringSize As UInt32 = br.ReadUInt32
+
+            ReDim GroundEffectTexture(nRecords - 1)
+
+            For i As Integer = 0 To nRecords - 1
+                br.BaseStream.Position = 20 + i * recordSize
+                GroundEffectTexture(i).EffectDoodad1 = br.ReadUInt32
+                GroundEffectTexture(i).EffectDoodad2 = br.ReadUInt32
+                GroundEffectTexture(i).EffectDoodad3 = br.ReadUInt32
+                GroundEffectTexture(i).EffectDoodad4 = br.ReadUInt32
+                Dim Unknown0 As UInt32 = br.ReadUInt32
+                Dim Unknown1 As UInt32 = br.ReadUInt32
+                Dim Unknown2 As UInt32 = br.ReadUInt32
+                Dim Unknown3 As UInt32 = br.ReadUInt32
+                GroundEffectTexture(i).Density = br.ReadUInt32
+            Next
+
+            Return True
+        End Function
+
+        Private Function LoadGroundEffectDoodad()
+            Dim FileName As String = "DBFilesClient\GroundEffectDoodad.dbc"
+            If Not myMPQ.Locate(FileName) Then Return False
+
+            Dim br As New BinaryReader(myMPQ.LoadFile(FileName))
+
+            If br.ReadChars(4) <> "WDBC" Then Return False
+
+            Dim nRecords As UInt32 = br.ReadUInt32
+            Dim nFields As UInt32 = br.ReadUInt32
+            Dim recordSize As UInt32 = br.ReadUInt32
+            Dim stringSize As UInt32 = br.ReadUInt32
+
+            ReDim GroundEffectDoodad(nRecords - 1)
+
+            For i As Integer = 0 To nRecords - 1
+                br.BaseStream.Position = 20 + i * recordSize
+                GroundEffectDoodad(i).DoodadID = br.ReadUInt32
+                Dim Unknown1 As UInt32 = br.ReadUInt32
+                Dim offStr As UInt32 = br.ReadUInt32
+                GroundEffectDoodad(i).DoodadModel = "World\NoDXT\Detail\" & myHF.GetZeroDelimitedString(br, 20 + nRecords * recordSize + offStr)
+            Next
+
+            Return True
+        End Function
+
+        Private Function LoadAnimationData()
+            Dim FileName As String = "DBFilesClient\AnimationData.dbc"
+            If Not myMPQ.Locate(FileName) Then Return False
+
+            Dim br As New BinaryReader(myMPQ.LoadFile(FileName))
+
+            If br.ReadChars(4) <> "WDBC" Then Return False
+
+            Dim nRecords As UInt32 = br.ReadUInt32
+            Dim nFields As UInt32 = br.ReadUInt32
+            Dim recordSize As UInt32 = br.ReadUInt32
+            Dim stringSize As UInt32 = br.ReadUInt32
+
+            ReDim AnimationData(nRecords - 1)
+
+            For i As Integer = 0 To nRecords - 1
+                br.BaseStream.Position = 20 + i * recordSize
+
+                AnimationData(i).ID = br.ReadUInt32
+                Dim offStr As UInt32 = br.ReadUInt32
+                AnimationData(i).WeaponState = br.ReadUInt32
+                AnimationData(i).Flags = br.ReadUInt32
+                Dim Unknown1 As UInt32 = br.ReadUInt32
+                AnimationData(i).Preceeding = br.ReadUInt32
+                AnimationData(i).RealID = br.ReadUInt32
+                AnimationData(i).Group = br.ReadUInt32
+                AnimationData(i).Name = myHF.GetZeroDelimitedString(br, 20 + nRecords * recordSize + offStr)
+            Next
+
             Return True
         End Function
 

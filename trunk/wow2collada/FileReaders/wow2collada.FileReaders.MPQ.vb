@@ -21,7 +21,7 @@ Namespace FileReaders
             Dim Size As Integer
         End Structure
 
-        Private _KnownMPQ As String() 'list of mpq's relative to the DATA directory 
+        Private _KnownMPQ As New List(Of String) 'list of mpq's relative to the DATA directory 
         Private _BasePath As String
         Public FileList As New System.Collections.Generic.Dictionary(Of String, FileListEntry)
         Public FileTree As New wow2collada.FileReaders.Node(Nothing, "ROOT")
@@ -44,23 +44,23 @@ Namespace FileReaders
             ' manual override for my computer because I have several WOW installations with different patchlevels
             If System.Environment.MachineName.ToLower = "remo-d2" Then _BasePath = "d:\temp\data\"
 
-            ReDim _KnownMPQ(15) ' I don't want to iterate through the directory reading arbitrary MPQs... (for now)
-            _KnownMPQ(0) = "common.mpq"
-            _KnownMPQ(1) = "common-2.mpq"
-            _KnownMPQ(2) = "patch.mpq"
-            _KnownMPQ(3) = "patch-2.mpq"
-            _KnownMPQ(4) = "expansion.mpq"
-            _KnownMPQ(5) = "lichking.mpq"
-            _KnownMPQ(6) = "deDE\backup-deDE.mpq"
-            _KnownMPQ(7) = "deDE\base-deDE.mpq"
-            _KnownMPQ(8) = "deDE\expansion-locale-deDE.mpq"
-            _KnownMPQ(9) = "deDE\expansion-speech-deDE.mpq"
-            _KnownMPQ(10) = "deDE\lichking-locale-deDE.mpq"
-            _KnownMPQ(11) = "deDE\lichking-speech-deDE.mpq"
-            _KnownMPQ(12) = "deDE\locale-deDE.mpq"
-            _KnownMPQ(13) = "deDE\patch-deDE.mpq"
-            _KnownMPQ(14) = "deDE\patch-deDE-2.mpq"
-            _KnownMPQ(15) = "deDE\speech-deDE.mpq"
+            ' I don't want to iterate through the directory reading arbitrary MPQs... (for now)
+            _KnownMPQ.Add("common.mpq")
+            _KnownMPQ.Add("patch.mpq")
+            _KnownMPQ.Add("patch-2.mpq")
+            _KnownMPQ.Add("expansion.mpq")
+            _KnownMPQ.Add("lichking.mpq")
+            _KnownMPQ.Add("deDE\base-deDE.mpq")
+            _KnownMPQ.Add("deDE\expansion-locale-deDE.mpq")
+            _KnownMPQ.Add("deDE\expansion-speech-deDE.mpq")
+            _KnownMPQ.Add("deDE\lichking-locale-deDE.mpq")
+            _KnownMPQ.Add("deDE\lichking-speech-deDE.mpq")
+            _KnownMPQ.Add("deDE\locale-deDE.mpq")
+            _KnownMPQ.Add("deDE\patch-deDE.mpq")
+            _KnownMPQ.Add("deDE\patch-deDE-2.mpq")
+            _KnownMPQ.Add("deDE\speech-deDE.mpq")
+            '_KnownMPQ.Add("common-2.mpq")
+            '_KnownMPQ.Add("deDE\backup-deDE.mpq")
 
         End Sub
 
@@ -73,10 +73,10 @@ Namespace FileReaders
             Dim subProz As Single
             Dim subTick As Single
 
-            subTick = 99 / _KnownMPQ.Length
+            subTick = 99 / _KnownMPQ.Count
 
-            For i As Integer = 0 To _KnownMPQ.Length - 1
-                Dim archiveFile As String = _BasePath & _KnownMPQ(i)
+            For i As Integer = 0 To _KnownMPQ.Count - 1
+                Dim archiveFile As String = _BasePath & _KnownMPQ.ElementAt(i)
 
                 If File.Exists(archiveFile) Then
 
@@ -116,7 +116,7 @@ Namespace FileReaders
                                             Next
                                         End If
 
-                                    Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".dbc", ".sbt", ".ttf"
+                                    Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".sbt", ".ttf", ".dbc"
                                     Case ".xsd", ".wdl", ".wdt", ".icns", ".xib", ".nib", ".wtf", ".rsrc", ".bls", ".html", ".pdf", ".js", ".jpg", ".wfx"
                                     Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif", ".blp", ".wav", ".mp3"
                                         'ignore... (don't allow user to select those directly as it would be pointless, kind of, we are NOT in the business of MPQ Explorer)
@@ -142,6 +142,18 @@ Namespace FileReaders
         Public Function Locate(ByVal path As String) As Boolean
             If path Is Nothing Then Return False
             Return FileList.ContainsKey(path.ToLower)
+        End Function
+
+        ''' <summary>
+        ''' Return the MPQ that a specific file is in (mainly used for debugging
+        ''' </summary>
+        ''' <param name="path">The file to locate</param>
+        ''' <returns>The name of the MPQ containing the file</returns>
+        ''' <remarks></remarks>
+        Public Function LocateMPQ(ByVal path As String) As String
+            If path Is Nothing Then Return ""
+            If Not Locate(path) Then Return ""
+            Return FileList(path).Archive
         End Function
 
         ''' <summary>

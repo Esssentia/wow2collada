@@ -51,10 +51,10 @@ Namespace FileReaders
         Public TextureUnits As sTextureUnit()
 
         Public Function Load(ByVal FileName As String) As Boolean
-            Return LoadFromStream(File.OpenRead(FileName), FileName)
+            Return Load(File.OpenRead(FileName), FileName)
         End Function
 
-        Public Function LoadFromStream(ByVal File As Stream, ByVal FileName As String) As Boolean
+        Public Function Load(ByVal File As Stream, ByVal FileName As String) As Boolean
             Dim br As New BinaryReader(File)
 
             Dim Magic As String = br.ReadChars(4)
@@ -135,6 +135,14 @@ Namespace FileReaders
 
     End Class
 
+    Class ANIM
+
+        Public Function Load()
+            Return True
+        End Function
+
+    End Class
+
     Class M2
 
         ''' <summary>
@@ -167,18 +175,53 @@ Namespace FileReaders
             Public Filename As String
         End Structure
 
+        Public Structure sAnimationSequence
+            Public AnimationID As Integer
+            Public SubAnimationID As Integer
+            Public Length As Integer
+            Public MovingSpeed As Single
+            Public PlaybackSpeed As Integer
+            Public BoundingBox1 As Vector3
+            Public BoundingBox2 As Vector3
+            Public Radius As Single
+            Public NextAnimationID As Integer
+            Public Index As Integer
+        End Structure
+
+        Public Structure sBones
+            Public AnimationSequence As Integer
+            Public Flags As Integer
+            Public ParentBone As Integer
+            Public GeosetID As Integer
+            Public Translation As Vector3
+            Public Rotation As Quaternion
+            Public Scaling As Vector3
+            Public PivotPoint As Vector3
+        End Structure
+
+        Public Structure sRenderFlag
+            Dim Flags As Integer
+            Dim Blending As Integer
+        End Structure
+
         Public ModelName As String
         Public VersionInfo As String
         Public ModelType As UInt32
         Public Vertices As sVertex()
         Public Textures As sTexture()
         Public TextureLookup As UInt16()
+        Public AnimationSequences As sAnimationSequence()
+        Public AnimationLookup As Integer()
+        Public Bones As sBones()
+        Public BoneLookup As Integer()
+        Public KeyBoneLookup As Integer()
+        Public RenderFlags As sRenderFlag()
 
         Public Function Load(ByVal FileName As String) As Boolean
-            Return LoadFromStream(File.OpenRead(FileName), FileName)
+            Return Load(File.OpenRead(FileName), FileName)
         End Function
 
-        Public Function LoadFromStream(ByVal File As Stream, ByVal FileName As String) As Boolean
+        Public Function Load(ByVal File As Stream, ByVal FileName As String) As Boolean
             Dim br As New BinaryReader(File)
 
             Dim Magic As String = br.ReadChars(4)
@@ -224,20 +267,7 @@ Namespace FileReaders
             Dim ofsTransLookup As UInt32 = br.ReadUInt32
             Dim nTexAnimLookup As UInt32 = br.ReadUInt32
             Dim ofsTexAnimLookup As UInt32 = br.ReadUInt32
-            Dim Unknown00 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown01 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown02 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown03 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown04 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown05 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown06 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown07 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown08 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown09 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown10 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown11 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown12 As Single = br.ReadSingle 'skip 14 floats (unknown content)
-            Dim Unknown13 As Single = br.ReadSingle 'skip 14 floats (unknown content)
+            br.BaseStream.Position = br.BaseStream.Position + 14 * 4 'skip 14 floats (unknown content)
             Dim nBoundingTriangles As UInt32 = br.ReadUInt32
             Dim ofsBoundingTriangles As UInt32 = br.ReadUInt32
             Dim nBoundingVertices As UInt32 = br.ReadUInt32
@@ -265,6 +295,7 @@ Namespace FileReaders
             br.BaseStream.Position = ofsName
             Me.ModelName = br.ReadChars(lName - 1)
 
+            ' vertices
             ReDim Vertices(nVertices - 1)
             br.BaseStream.Position = ofsVertices
             For i As Integer = 0 To nVertices - 1
@@ -277,6 +308,7 @@ Namespace FileReaders
                 Dim Unknown2 As Single = br.ReadSingle
             Next
 
+            'textures
             ReDim Textures(nTextures - 1)
             br.BaseStream.Position = ofsTextures
             For i As Integer = 0 To nTextures - 1
@@ -287,6 +319,7 @@ Namespace FileReaders
                 Textures(i).ofsFilename = br.ReadUInt32
             Next i
 
+            'texture lookups
             ReDim TextureLookup(nTexLookup - 1)
             br.BaseStream.Position = ofsTexLookup
             For i As Integer = 0 To nTexLookup - 1
@@ -298,14 +331,79 @@ Namespace FileReaders
                     Case 0
                         br.BaseStream.Position = Textures(i).ofsFilename
                         Textures(i).Filename = br.ReadChars(Textures(i).lenFilename - 1) 'length includes trailing chr(0)
+                        Textures(i).Filename = Textures(i).Filename.ToLower
                     Case 11, 12, 13
-                        Dim bp As String = "d:\temp\mpq\"
                         Dim ID As UInt32 = myDBC.GetIDFromModelFileName(FileName)
                         Dim Tex As String = myDBC.GetTextureFromCreatureModelID(ID, Textures(i).Type)
                         Dim s As String = (FileName.Substring(0, FileName.LastIndexOf("\") + 1) & Tex & ".blp").ToLower
-                        If (s.IndexOf(bp) = 0) Then s = s.Substring(bp.Length)
                         Textures(i).Filename = s
                 End Select
+            Next
+
+            'animation sequences
+            ReDim AnimationSequences(nAnimations - 1)
+            br.BaseStream.Position = ofsAnimations
+            For i As Integer = 0 To nAnimations - 1
+                With AnimationSequences(i)
+                    .AnimationID = br.ReadUInt16
+                    .SubAnimationID = br.ReadUInt16
+                    .Length = br.ReadUInt32
+                    .MovingSpeed = br.ReadSingle
+                    br.BaseStream.Position = br.BaseStream.Position + 4 * 4 'skip for uint32 (unknown)
+                    .PlaybackSpeed = br.ReadUInt32
+                    .BoundingBox1 = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .BoundingBox2 = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .Radius = br.ReadSingle
+                    .NextAnimationID = br.ReadUInt16
+                    .Index = br.ReadUInt16
+                End With
+            Next i
+
+            'animation lookup
+            If nAnimationLookup > 0 Then
+                ReDim AnimationLookup(nAnimationLookup - 1)
+                br.BaseStream.Position = ofsAnimationLookup
+                For i As Integer = 0 To nAnimationLookup - 1
+                    AnimationLookup(i) = br.ReadUInt16
+                Next
+            End If
+
+            'bones
+            ReDim Bones(nBones - 1)
+            br.BaseStream.Position = ofsBones
+            For i As Integer = 0 To nBones - 1
+                With Bones(i)
+                    .AnimationSequence = myHF.CatchOverflow(br.ReadUInt32)
+                    .Flags = myHF.CatchOverflow(br.ReadUInt32)
+                    .ParentBone = br.ReadUInt16
+                    .GeosetID = br.ReadUInt16
+                    .Translation = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .Rotation = New Quaternion(myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16))
+                    .Scaling = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .PivotPoint = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                End With
+            Next i
+
+            'bone lookup table
+            ReDim BoneLookup(nBoneLookupTable - 1)
+            br.BaseStream.Position = ofsBoneLookupTable
+            For i As Integer = 0 To nBoneLookupTable - 1
+                BoneLookup(i) = br.ReadUInt16
+            Next
+
+            'key bone lookup table
+            ReDim KeyBoneLookup(nKeyBoneLookup - 1)
+            br.BaseStream.Position = ofsKeyBoneLookup
+            For i As Integer = 0 To nKeyBoneLookup - 1
+                KeyBoneLookup(i) = br.ReadUInt16
+            Next
+
+            'render flags table
+            ReDim RenderFlags(nRenderFlags - 1)
+            br.BaseStream.Position = ofsRenderFlags
+            For i As Integer = 0 To nRenderFlags - 1
+                RenderFlags(i).Flags = br.ReadUInt16
+                RenderFlags(i).Blending = br.ReadUInt16
             Next
 
             ' calculated values
