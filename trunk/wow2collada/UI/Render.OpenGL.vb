@@ -24,6 +24,10 @@ Public Class RenderFormOpenGL
     Private RIGHT_VECTOR As Vector3 = New Vector3(1, 0, 0)
     Private UP_VECTOR As Vector3 = New Vector3(0.08715539, 0.7969557, 0.5977167)
 
+    'FPS stuff
+    Private LastTimeStamp As Integer
+    Private FrameCounter As Integer
+
     Private Sub OpenGLControl_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles OpenGLControl.KeyDown
         Dim Mult As Integer = 1
         Dim AngleStep As Single = 5
@@ -119,21 +123,34 @@ Public Class RenderFormOpenGL
         Gl.glClear(Gl.GL_COLOR_BUFFER_BIT Or Gl.GL_DEPTH_BUFFER_BIT)
         Gl.glLoadIdentity()
         Gl.glTranslatef(0.0F, 0.0F, -20.0F)
-        Gl.glEnable(Gl.GL_TEXTURE_2D)
+        'Gl.glCullFace(Gl.GL_BACK)
+        'Gl.glEnable(Gl.GL_CULL_FACE)
 
         'Rotate
         Static Dim LastTicks As Integer = Environment.TickCount
         Dim NowTicks As Integer = Environment.TickCount()
+
+        If (NowTicks - LastTimeStamp) > 1000 Then
+            LastTimeStamp = NowTicks
+            LabelFPS.Text = String.Format("{0} FPS", FrameCounter)
+            FrameCounter = 0
+        End If
+
+        FrameCounter += 1
+
         If Rotate Then Gl.glRotatef((NowTicks - LastTicks) / 30.0F, 0, 1, 0)
 
         If DrawWireframe Then
+            Gl.glDisable(Gl.GL_TEXTURE_2D)
             Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_LINE)
             For Each Submesh As sSubMesh In myHF.SubMeshes
+                Gl.glColor4f(0.2F, 0.2F, 0.2F, 1.0F)
                 Gl.glCallList(Submesh.OpenGLMeshID)
             Next
         End If
 
         If DrawTextured Then
+            Gl.glEnable(Gl.GL_TEXTURE_2D)
             Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_FILL)
             For Each li As ListViewItem In SubSets.Items
                 If li.Checked Then
@@ -141,10 +158,15 @@ Public Class RenderFormOpenGL
                         For Each Tex As sTextureEntry In .TextureList
                             Select Case Tex.Blending
                                 Case 0 'opaque
-                                    Gl.glDisable(Gl.GL_BLEND) '?!
-                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                    Gl.glEnable(Gl.GL_ALPHA_TEST)
-                                    Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
+                                    If Tex.Blending2 Then
+                                        Gl.glEnable(Gl.GL_BLEND)
+                                        Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                        Gl.glEnable(Gl.GL_ALPHA_TEST)
+                                        Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
+                                    Else
+                                        Gl.glDisable(Gl.GL_BLEND)
+                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                    End If
                                     Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
                                 Case 1 'BM_TRANSPARENT
@@ -193,6 +215,7 @@ Public Class RenderFormOpenGL
                             'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
 
                             Gl.glBindTexture(Gl.GL_TEXTURE_2D, myHF.Textures(Tex.TextureID).OpenGLTexID)
+                            Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
                             Gl.glCallList(.OpenGLMeshID)
 
                         Next
@@ -278,7 +301,6 @@ Public Class RenderFormOpenGL
                 Gl.glBegin(Gl.GL_TRIANGLES)
                 For Each triangle As sTriangle In submesh.TriangleList
                     For j = 0 To 2
-                        Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
                         Gl.glTexCoord2f(triangle.P(j).UV.X, triangle.P(j).UV.Y)
                         Gl.glNormal3f(triangle.P(j).Normal.X, triangle.P(j).Normal.Z, -triangle.P(j).Normal.Y)
                         Gl.glVertex3f(triangle.P(j).Position.X, triangle.P(j).Position.Z, -triangle.P(j).Position.Y)
@@ -397,6 +419,10 @@ Public Class RenderFormOpenGL
     Private Sub DebugModeToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles DebugModeToolStripMenuItem.Click
         DebugModeToolStripMenuItem.Checked = Not DebugModeToolStripMenuItem.Checked
         SplitContainer1.Panel2Collapsed = Not DebugModeToolStripMenuItem.Checked
+    End Sub
+
+    Public Sub SetFileName(ByVal FileName As String)
+        LabelFile.Text = FileName
     End Sub
 
 End Class

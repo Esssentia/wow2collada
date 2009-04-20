@@ -38,7 +38,9 @@ Class HelperFunctions
     Public Structure sTextureEntry
         Dim TextureID As String
         Dim Flags As Integer
+        Dim Flags2 As Integer
         Dim Blending As Integer
+        Dim Blending2 As Integer
     End Structure
 
     ''' <summary>

@@ -134,7 +134,7 @@ Public Class OpenWMOOptions
             ProgressBar1.ForeColor = Color.FromArgb(255, 255 - 255 * ProgressBar1.Value / 100, 255 * ProgressBar1.Value / 100, 0)
             Application.DoEvents()
 
-            Dim TexFi As String = _WMO.Textures(i)
+            Dim TexFi As String = _WMO.Textures(i).TexID
             If myMPQ.Locate(TexFi) Then
                 If Not myHF.Textures.ContainsKey(TexFi) Then
                     Dim Tex As New wow2collada.HelperFunctions.sTexture
@@ -178,7 +178,9 @@ Public Class OpenWMOOptions
                         submesh.TriangleList = New System.Collections.Generic.List(Of HelperFunctions.sTriangle)
                         submesh.TextureList = New System.Collections.Generic.List(Of HelperFunctions.sTextureEntry)
                         Dim texent As HelperFunctions.sTextureEntry
-                        texent.TextureID = _WMO.Textures(MatID)
+                        texent.TextureID = _WMO.Textures(MatID).TexID
+                        texent.flags2 = _WMO.Textures(MatID).Flags
+                        texent.blending2 = _WMO.Textures(MatID).Blending
                         submesh.TextureList.Add(texent)
                     End If
 

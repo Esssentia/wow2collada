@@ -50,6 +50,12 @@ Namespace FileReaders
             Public Materials As Byte()
         End Structure
 
+        Public Structure sMaterial
+            Dim TexID As String
+            Dim Flags As Integer
+            Dim Blending As Integer
+        End Structure
+
         Public nMaterials As UInt32
         Public nGroups As UInt32
         Public nPortals As UInt32
@@ -64,7 +70,7 @@ Namespace FileReaders
         Public DoodadSets As sDoodadSet()
         Public Doodads As sDoodad()
         Public Groups As String()
-        Public Textures As String()
+        Public Textures As sMaterial()
         Public SubSets As sSubSet()
 
         Public Sub LoadRoot(ByVal File As Byte())
@@ -114,10 +120,12 @@ Namespace FileReaders
                         MOTX = br.ReadBytes(ChunkLen)
                     Case "MOMT" ' Materials
                         For i As Integer = 0 To nMaterials - 1
-                            br.BaseStream.Position = br.BaseStream.Position + 12
+                            br.BaseStream.Position = br.BaseStream.Position + 4
+                            Textures(i).Flags = br.ReadUInt32
+                            Textures(i).Blending = br.ReadUInt32
                             Dim StartID As UInt32 = br.ReadUInt32 'Texture String Start
                             br.BaseStream.Position = br.BaseStream.Position + 48
-                            Textures(i) = myHF.GetZeroDelimitedString(MOTX, StartID)
+                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID)
                         Next
                     Case "MOGN" 'Group Names (lets get them just in case...
                         Groups = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
@@ -306,13 +314,17 @@ Namespace FileReaders
                         'We get them through Materials instead of directly...
                         'Textures = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
                         MOTX = br.ReadBytes(ChunkLen)
+
                     Case "MOMT" ' Materials
                         For i As Integer = 0 To nMaterials - 1
-                            br.BaseStream.Position = br.BaseStream.Position + 12
+                            br.BaseStream.Position = br.BaseStream.Position + 4
+                            Textures(i).Flags = br.ReadUInt32
+                            Textures(i).Blending = br.ReadUInt32
                             Dim StartID As UInt32 = br.ReadUInt32 'Texture String Start
                             br.BaseStream.Position = br.BaseStream.Position + 48
-                            Textures(i) = myHF.GetZeroDelimitedString(MOTX, StartID)
+                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID)
                         Next
+
                     Case "MOGN" 'Group Names (lets get them just in case...
                         Groups = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
 

@@ -8,7 +8,7 @@ Public Class MainForm
 
     Private Sub RenderForm_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
         CurrentFile = "World\AZEROTH\WESTFALL\PASSIVEDOODADS\Crate\WestFallCrate.m2"
-        StatusLabel1.Text = CurrentFile
+
         For Each i As String In myMPQ.FileTree.Nodes.Keys
             Dim Out As TreeNode = FileList.Nodes.Add(i)
             Out.Nodes.Add("(dummy)")
@@ -34,12 +34,13 @@ Public Class MainForm
         TrackBar1.Maximum = Math.Max(0, myHF.Textures.Count - 1)
         TrackBar1.Value = 0
         TrackBar1_ValueChanged(Me, New System.EventArgs)
+        StatusLabel1.Text = CurrentFile
+        frmOG.SetFileName(CurrentFile)
     End Sub
 
     Private Sub TreeView1_AfterSelect(ByVal sender As Object, ByVal e As System.Windows.Forms.TreeViewEventArgs) Handles FileList.AfterSelect
         If e.Node.Nodes Is Nothing Or e.Node.Nodes.Count = 0 Then ' only look at leafs
             CurrentFile = e.Node.FullPath
-            StatusLabel1.Text = CurrentFile
             LoadModelFromMPQ()
         End If
     End Sub
@@ -121,7 +122,7 @@ Public Class MainForm
     Private Sub FileListSaveFile_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles FileListSaveFile.FileOk
         Dim Dest As String = FileListSaveFile.FileName
         Dim Source As String = FileList.SelectedNode.FullPath
-        If Dest > "" Then wow2collada.myMPQ.SaveFileToDisk(Source, Dest)
+        If Dest > "" Then myMPQ.SaveFileToDisk(Source, Dest)
     End Sub
 
     Private Sub FileListPopupOpenInHexViewer_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles FileListPopupOpenInHexViewer.Click
