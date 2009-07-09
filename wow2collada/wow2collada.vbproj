@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9FC20B5D-537D-4ACC-8494-0FF0B486781F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -63,14 +63,8 @@
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.DirectX.Direct3D, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.DirectX.Direct3D, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
@@ -83,13 +77,10 @@
     <Reference Include="System.Windows.Forms">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Tao.DevIl, Version=1.6.8.3, Culture=neutral, PublicKeyToken=7ec4053013524957, processorArchitecture=MSIL" />
     <Reference Include="Tao.OpenGl, Version=2.1.0.12, Culture=neutral, PublicKeyToken=1ca010269a4501ef, processorArchitecture=MSIL" />
     <Reference Include="Tao.Platform.Windows, Version=1.0.0.5, Culture=neutral, PublicKeyToken=701104b2da67a104, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
-    <Import Include="Microsoft.DirectX" />
-    <Import Include="Microsoft.DirectX.Direct3D" />
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="System" />
     <Import Include="System.Collections" />
@@ -100,6 +91,13 @@
     <Import Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileReaders\wow2collada.FileWriters.W2C.vb" />
+    <Compile Include="UI\ADTExplorer.Designer.vb">
+      <DependentUpon>ADTExplorer.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ADTExplorer.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\Render.OpenGL.Designer.vb">
       <DependentUpon>Render.OpenGL.vb</DependentUpon>
     </Compile>
@@ -181,6 +179,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="UI\ADTExplorer.resx">
+      <DependentUpon>ADTExplorer.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\Render.OpenGL.resx">
       <DependentUpon>Render.OpenGL.vb</DependentUpon>
       <SubType>Designer</SubType>

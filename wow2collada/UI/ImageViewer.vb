@@ -13,7 +13,6 @@ Public Class ImageViewer
     End Sub
 
     Private Sub SaveFileDialog1_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles SaveFileDialog1.FileOk
-        Dim s As String = SaveFileDialog1.FileName
-        PictureBox1.Image.Save(s)
+        PictureBox1.Image.Save(SaveFileDialog1.FileName)
     End Sub
 End Class

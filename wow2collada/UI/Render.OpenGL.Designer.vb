@@ -36,7 +36,8 @@ Partial Class RenderFormOpenGL
         Me.DebugModeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer
         Me.OpenGLControl = New Tao.Platform.Windows.SimpleOpenGlControl
-        Me.SubSets = New System.Windows.Forms.ListView
+        Me.SubSets = New System.Windows.Forms.TreeView
+        Me.BonesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1.SuspendLayout()
         Me.MenuStrip1.SuspendLayout()
         Me.SplitContainer1.Panel1.SuspendLayout()
@@ -86,7 +87,7 @@ Partial Class RenderFormOpenGL
         '
         'DisplayToolStripMenuItem
         '
-        Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TexturedToolStripMenuItem, Me.WireframeToolStripMenuItem})
+        Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TexturedToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.BonesToolStripMenuItem})
         Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
         Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.DisplayToolStripMenuItem.Text = "Display"
@@ -96,13 +97,13 @@ Partial Class RenderFormOpenGL
         Me.TexturedToolStripMenuItem.Checked = True
         Me.TexturedToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
         Me.TexturedToolStripMenuItem.Name = "TexturedToolStripMenuItem"
-        Me.TexturedToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
+        Me.TexturedToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.TexturedToolStripMenuItem.Text = "Textured"
         '
         'WireframeToolStripMenuItem
         '
         Me.WireframeToolStripMenuItem.Name = "WireframeToolStripMenuItem"
-        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
+        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.WireframeToolStripMenuItem.Text = "Wireframe"
         '
         'ResetViewToolStripMenuItem
@@ -168,8 +169,12 @@ Partial Class RenderFormOpenGL
         Me.SubSets.Name = "SubSets"
         Me.SubSets.Size = New System.Drawing.Size(122, 613)
         Me.SubSets.TabIndex = 0
-        Me.SubSets.UseCompatibleStateImageBehavior = False
-        Me.SubSets.View = System.Windows.Forms.View.List
+        '
+        'BonesToolStripMenuItem
+        '
+        Me.BonesToolStripMenuItem.Name = "BonesToolStripMenuItem"
+        Me.BonesToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.BonesToolStripMenuItem.Text = "Bones"
         '
         'RenderFormOpenGL
         '
@@ -208,6 +213,6 @@ Partial Class RenderFormOpenGL
     Friend WithEvents DebugModeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SplitContainer1 As System.Windows.Forms.SplitContainer
     Friend WithEvents OpenGLControl As Tao.Platform.Windows.SimpleOpenGlControl
-    Friend WithEvents SubSets As System.Windows.Forms.ListView
-
+    Friend WithEvents SubSets As System.Windows.Forms.TreeView
+    Friend WithEvents BonesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 End Class

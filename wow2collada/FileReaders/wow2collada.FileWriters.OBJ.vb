@@ -6,7 +6,7 @@ Namespace FileWriters
 
     Class OBJ
 
-        Public Function Save(ByVal Filename As String, ByRef SubMeshes As List(Of HelperFunctions.sSubMesh), ByRef Textures As Dictionary(Of String, HelperFunctions.sTexture)) As Boolean
+        Public Function Save(ByVal Filename As String, ByRef Models As List(Of sModel)) As Boolean
             'Save everything as OBJ...
             Dim OBJFile As String
             Dim MTLFile As String
@@ -15,6 +15,7 @@ Namespace FileWriters
             Dim Lines As New List(Of String)
             Dim CurrIdx As Integer
             Dim CurrGrp As Integer
+            Dim TextureList As New Dictionary(Of String, Integer)
 
             BasePath = myHF.GetBasePath(Filename)
             OBJFile = BasePath & "\" & myHF.GetBaseName(Filename) & ".obj"
@@ -39,26 +40,30 @@ Namespace FileWriters
             Lines.Add("# Exported from wow2collada")
             Lines.Add("")
 
-            For i As Integer = 0 To Textures.Count - 1
-                With (Textures.ElementAt(i).Value)
+            For h As Integer = 0 To models.Count - 1
+                For i As Integer = 0 To models(h).Textures.Count - 1
+                    With models(h).Textures.ElementAt(i)
+                        TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.Key)) & ".png"
+                        If Not TextureList.ContainsKey(TEXFile) Then
+                            .Value.TextureMap.Save(TEXFile)
+                            TextureList.Add(TEXFile, 1)
 
-                    TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.ID)) & ".png"
-                    .TexGra.Save(TEXFile)
+                            Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.Key))))
+                            Lines.Add("Kd 1.000000 1.000000 1.000000")
+                            Lines.Add("Ka 1.000000 1.000000 1.000000")
+                            Lines.Add("Ks 1.000000 1.000000 1.000000")
+                            Lines.Add("Ke 0.000000 0.000000 0.000000")
+                            Lines.Add("Ns 0.000000")
+                            Lines.Add("illum 1")
+                            Lines.Add(String.Format("map_Kd {0}", TEXFile))
+                            Lines.Add("")
+                        End If
+                        
+                    End With
+                Next
 
-                    Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.ID))))
-                    Lines.Add("Kd 1.000000 1.000000 1.000000")
-                    Lines.Add("Ka 1.000000 1.000000 1.000000")
-                    Lines.Add("Ks 1.000000 1.000000 1.000000")
-                    Lines.Add("Ke 0.000000 0.000000 0.000000")
-                    Lines.Add("Ns 0.000000")
-                    Lines.Add("illum 1")
-                    Lines.Add(String.Format("map_Kd {0}", TEXFile))
-                    Lines.Add("")
-                End With
+                File.WriteAllLines(MTLFile, Lines.ToArray)
             Next
-
-            File.WriteAllLines(MTLFile, Lines.ToArray)
-
 
             'Create OBJ File
 
@@ -95,53 +100,71 @@ Namespace FileWriters
             Lines.Add("")
 
             'all vertices first
-            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
-                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
-                    For j As Integer = 0 To 2
-                        Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", triangle.P(j).Position.X, triangle.P(j).Position.Y, triangle.P(j).Position.Z))
+            For h As Integer = 0 To Models.Count - 1
+                With Models(h)
+                    For i As Integer = 0 To .Meshes.Count - 1
+                        For Each triangle As sTriangle In .Meshes(i).TriangleList
+                            For j As Integer = 0 To 2
+                                Dim vi As Integer = triangle.Vertices(j)
+                                Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", .Vertices(vi).Position.X, .Vertices(vi).Position.Y, .Vertices(vi).Position.Z))
+                            Next
+                        Next
+
                     Next
-                Next
+                End With
             Next
 
             Lines.Add("")
 
             'now vertex normals
-            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
-                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
-                    For j As Integer = 0 To 2
-                        Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", triangle.P(j).Normal.X, triangle.P(j).Normal.Y, triangle.P(j).Normal.Z))
+            For h As Integer = 0 To Models.Count - 1
+                With Models(h)
+                    For i As Integer = 0 To .Meshes.Count - 1
+                        For Each triangle As sTriangle In .Meshes(i).TriangleList
+                            For j As Integer = 0 To 2
+                                Dim vi As Integer = triangle.Vertices(j)
+                                Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", .Vertices(vi).Normal.X, .Vertices(vi).Normal.Y, .Vertices(vi).Normal.Z))
+                            Next
+                        Next
                     Next
-                Next
+                End With
             Next
 
             Lines.Add("")
 
             'now texture coordinates
-            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
-                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
-                    For j As Integer = 0 To 2
-                        Lines.Add(String.Format("vt {0:f6} {1:f6}", triangle.P(j).UV.X, 1 - triangle.P(j).UV.Y)) ' don't ask^^
+            For h As Integer = 0 To Models.Count - 1
+                With Models(h)
+                    For i As Integer = 0 To .Meshes.Count - 1
+                        For Each triangle As sTriangle In .Meshes(i).TriangleList
+                            For j As Integer = 0 To 2
+                                Dim vi As Integer = triangle.Vertices(j)
+                                Lines.Add(String.Format("vt {0:f6} {1:f6}", .Vertices(vi).TextureCoords.U, 1 - .Vertices(vi).TextureCoords.V)) ' don't ask^^
+                            Next
+                        Next
                     Next
-                Next
+                End With
             Next
 
             Lines.Add("")
 
             'now triangles with groups and materials
-            For Each submesh As HelperFunctions.sSubMesh In SubMeshes
+            For h As Integer = 0 To Models.Count - 1
+                For i As Integer = 0 To Models(h).Meshes.Count - 1
 
-                CurrGrp += 1
+                    CurrGrp += 1
 
-                Lines.Add("")
-                Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(submesh.TextureList(0).TextureID))))
-                Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(submesh.TextureList(0).TextureID))))
-                Lines.Add(String.Format("s {0}", CurrGrp))
+                    Lines.Add("")
+                    Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(Models(h).Meshes(i).TextureList(0).TextureID))))
+                    Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(Models(h).Meshes(i).TextureList(0).TextureID))))
+                    Lines.Add(String.Format("s {0}", CurrGrp))
 
-                For Each triangle As HelperFunctions.sTriangle In submesh.TriangleList
-                    CurrIdx += 1
-                    Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", CurrIdx * 3, CurrIdx * 3 + 1, CurrIdx * 3 + 2))
+                    For Each triangle As sTriangle In Models(h).Meshes(i).TriangleList
+                        Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", CurrIdx * 3 + 1, CurrIdx * 3 + 2, CurrIdx * 3 + 3))
+                        CurrIdx += 1
+                    Next
+
                 Next
-
             Next
             File.WriteAllLines(OBJFile, Lines.ToArray)
 

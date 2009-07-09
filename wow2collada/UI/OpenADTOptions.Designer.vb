@@ -41,17 +41,22 @@ Partial Class OpenADTOptions
         Me.Panel2 = New System.Windows.Forms.Panel
         Me.LoadM2s = New System.Windows.Forms.CheckBox
         Me.ListViewM2 = New System.Windows.Forms.ListView
+        Me.M2 = New System.Windows.Forms.ColumnHeader
         Me.OKButton = New System.Windows.Forms.Button
         Me.AutoClose = New System.Windows.Forms.CheckBox
         Me.Panel3 = New System.Windows.Forms.Panel
         Me.LoadWMOs = New System.Windows.Forms.CheckBox
         Me.ListViewWMO = New System.Windows.Forms.ListView
-        Me.M2 = New System.Windows.Forms.ColumnHeader
         Me.ColumnHeader1 = New System.Windows.Forms.ColumnHeader
+        Me.MenuStrip1 = New System.Windows.Forms.MenuStrip
+        Me.OptionsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.DumpADTToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.SaveADTDialog = New System.Windows.Forms.SaveFileDialog
         Me.Panel1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
         Me.Panel2.SuspendLayout()
         Me.Panel3.SuspendLayout()
+        Me.MenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
         'LoadButton
@@ -76,9 +81,9 @@ Partial Class OpenADTOptions
         Me.Panel1.Controls.Add(Me.Label3)
         Me.Panel1.Controls.Add(Me.Label2)
         Me.Panel1.Controls.Add(Me.Label1)
-        Me.Panel1.Location = New System.Drawing.Point(13, 13)
+        Me.Panel1.Location = New System.Drawing.Point(12, 27)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(421, 118)
+        Me.Panel1.Size = New System.Drawing.Size(422, 118)
         Me.Panel1.TabIndex = 2
         '
         'Label9
@@ -198,9 +203,9 @@ Partial Class OpenADTOptions
         'ListBox1
         '
         Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(15, 139)
+        Me.ListBox1.Location = New System.Drawing.Point(12, 152)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(419, 433)
+        Me.ListBox1.Size = New System.Drawing.Size(422, 420)
         Me.ListBox1.TabIndex = 4
         '
         'Panel2
@@ -208,9 +213,9 @@ Partial Class OpenADTOptions
         Me.Panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.Panel2.Controls.Add(Me.LoadM2s)
         Me.Panel2.Controls.Add(Me.ListViewM2)
-        Me.Panel2.Location = New System.Drawing.Point(664, 12)
+        Me.Panel2.Location = New System.Drawing.Point(664, 27)
         Me.Panel2.Name = "Panel2"
-        Me.Panel2.Size = New System.Drawing.Size(226, 559)
+        Me.Panel2.Size = New System.Drawing.Size(226, 544)
         Me.Panel2.TabIndex = 11
         '
         'LoadM2s
@@ -235,6 +240,11 @@ Partial Class OpenADTOptions
         Me.ListViewM2.TabIndex = 0
         Me.ListViewM2.UseCompatibleStateImageBehavior = False
         Me.ListViewM2.View = System.Windows.Forms.View.Details
+        '
+        'M2
+        '
+        Me.M2.Text = "     M2s"
+        Me.M2.Width = 205
         '
         'OKButton
         '
@@ -263,9 +273,9 @@ Partial Class OpenADTOptions
         Me.Panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.Panel3.Controls.Add(Me.LoadWMOs)
         Me.Panel3.Controls.Add(Me.ListViewWMO)
-        Me.Panel3.Location = New System.Drawing.Point(440, 13)
+        Me.Panel3.Location = New System.Drawing.Point(440, 27)
         Me.Panel3.Name = "Panel3"
-        Me.Panel3.Size = New System.Drawing.Size(218, 559)
+        Me.Panel3.Size = New System.Drawing.Size(218, 545)
         Me.Panel3.TabIndex = 14
         '
         'LoadWMOs
@@ -291,15 +301,35 @@ Partial Class OpenADTOptions
         Me.ListViewWMO.UseCompatibleStateImageBehavior = False
         Me.ListViewWMO.View = System.Windows.Forms.View.Details
         '
-        'M2
-        '
-        Me.M2.Text = "     M2s"
-        Me.M2.Width = 205
-        '
         'ColumnHeader1
         '
         Me.ColumnHeader1.Text = "     WMOs"
         Me.ColumnHeader1.Width = 196
+        '
+        'MenuStrip1
+        '
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.OptionsToolStripMenuItem})
+        Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
+        Me.MenuStrip1.Name = "MenuStrip1"
+        Me.MenuStrip1.Size = New System.Drawing.Size(902, 24)
+        Me.MenuStrip1.TabIndex = 15
+        Me.MenuStrip1.Text = "MenuStrip1"
+        '
+        'OptionsToolStripMenuItem
+        '
+        Me.OptionsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.DumpADTToolStripMenuItem})
+        Me.OptionsToolStripMenuItem.Name = "OptionsToolStripMenuItem"
+        Me.OptionsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
+        Me.OptionsToolStripMenuItem.Text = "Options"
+        '
+        'DumpADTToolStripMenuItem
+        '
+        Me.DumpADTToolStripMenuItem.Name = "DumpADTToolStripMenuItem"
+        Me.DumpADTToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DumpADTToolStripMenuItem.Text = "Dump ADT ..."
+        '
+        'SaveADTDialog
+        '
         '
         'OpenADTOptions
         '
@@ -314,8 +344,10 @@ Partial Class OpenADTOptions
         Me.Controls.Add(Me.ListBox1)
         Me.Controls.Add(Me.LoadButton)
         Me.Controls.Add(Me.StatusStrip1)
+        Me.Controls.Add(Me.MenuStrip1)
         Me.Controls.Add(Me.Panel1)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
+        Me.MainMenuStrip = Me.MenuStrip1
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "OpenADTOptions"
@@ -330,6 +362,8 @@ Partial Class OpenADTOptions
         Me.Panel2.PerformLayout()
         Me.Panel3.ResumeLayout(False)
         Me.Panel3.PerformLayout()
+        Me.MenuStrip1.ResumeLayout(False)
+        Me.MenuStrip1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -360,5 +394,9 @@ Partial Class OpenADTOptions
     Friend WithEvents ListViewWMO As System.Windows.Forms.ListView
     Friend WithEvents M2 As System.Windows.Forms.ColumnHeader
     Friend WithEvents ColumnHeader1 As System.Windows.Forms.ColumnHeader
+    Friend WithEvents MenuStrip1 As System.Windows.Forms.MenuStrip
+    Friend WithEvents OptionsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents DumpADTToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents SaveADTDialog As System.Windows.Forms.SaveFileDialog
 
 End Class

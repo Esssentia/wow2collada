@@ -25,6 +25,15 @@ Partial Class MainForm
         Me.ToolStripSeparator1 = New System.Windows.Forms.ToolStripSeparator
         Me.SaveAsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.QuitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ADTExplorerToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.TestcasesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ADTAzeroth2933ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ADTNorthend3233ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.ADTNorthend2525ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.WMOHumanFarmToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.M2BloodelfGuardToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.M2HumanMaleToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.StatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel
         Me.ProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
@@ -59,7 +68,7 @@ Partial Class MainForm
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.TestcasesToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(1162, 24)
@@ -89,6 +98,62 @@ Partial Class MainForm
         Me.QuitToolStripMenuItem.Name = "QuitToolStripMenuItem"
         Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
         Me.QuitToolStripMenuItem.Text = "Quit"
+        '
+        'ToolsToolStripMenuItem
+        '
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ADTExplorerToolStripMenuItem})
+        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
+        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(48, 20)
+        Me.ToolsToolStripMenuItem.Text = "Tools"
+        '
+        'ADTExplorerToolStripMenuItem
+        '
+        Me.ADTExplorerToolStripMenuItem.Name = "ADTExplorerToolStripMenuItem"
+        Me.ADTExplorerToolStripMenuItem.Size = New System.Drawing.Size(142, 22)
+        Me.ADTExplorerToolStripMenuItem.Text = "ADT Explorer"
+        '
+        'TestcasesToolStripMenuItem
+        '
+        Me.TestcasesToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ADTAzeroth2933ToolStripMenuItem, Me.ADTNorthend3233ToolStripMenuItem, Me.ADTNorthend2525ToolStripMenuItem, Me.WMOHumanFarmToolStripMenuItem, Me.M2BloodelfGuardToolStripMenuItem, Me.M2HumanMaleToolStripMenuItem})
+        Me.TestcasesToolStripMenuItem.Name = "TestcasesToolStripMenuItem"
+        Me.TestcasesToolStripMenuItem.Size = New System.Drawing.Size(69, 20)
+        Me.TestcasesToolStripMenuItem.Text = "Testcases"
+        '
+        'ADTAzeroth2933ToolStripMenuItem
+        '
+        Me.ADTAzeroth2933ToolStripMenuItem.Name = "ADTAzeroth2933ToolStripMenuItem"
+        Me.ADTAzeroth2933ToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.ADTAzeroth2933ToolStripMenuItem.Text = "ADT Azeroth 36/49"
+        '
+        'ADTNorthend3233ToolStripMenuItem
+        '
+        Me.ADTNorthend3233ToolStripMenuItem.Name = "ADTNorthend3233ToolStripMenuItem"
+        Me.ADTNorthend3233ToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.ADTNorthend3233ToolStripMenuItem.Text = "ADT Northend 32/33"
+        '
+        'ADTNorthend2525ToolStripMenuItem
+        '
+        Me.ADTNorthend2525ToolStripMenuItem.Name = "ADTNorthend2525ToolStripMenuItem"
+        Me.ADTNorthend2525ToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.ADTNorthend2525ToolStripMenuItem.Text = "ADT Northend 25/25"
+        '
+        'WMOHumanFarmToolStripMenuItem
+        '
+        Me.WMOHumanFarmToolStripMenuItem.Name = "WMOHumanFarmToolStripMenuItem"
+        Me.WMOHumanFarmToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.WMOHumanFarmToolStripMenuItem.Text = "WMO Human Farm"
+        '
+        'M2BloodelfGuardToolStripMenuItem
+        '
+        Me.M2BloodelfGuardToolStripMenuItem.Name = "M2BloodelfGuardToolStripMenuItem"
+        Me.M2BloodelfGuardToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.M2BloodelfGuardToolStripMenuItem.Text = "M2 BloodelfGuard"
+        '
+        'M2HumanMaleToolStripMenuItem
+        '
+        Me.M2HumanMaleToolStripMenuItem.Name = "M2HumanMaleToolStripMenuItem"
+        Me.M2HumanMaleToolStripMenuItem.Size = New System.Drawing.Size(183, 22)
+        Me.M2HumanMaleToolStripMenuItem.Text = "M2 HumanMale"
         '
         'StatusStrip1
         '
@@ -287,5 +352,14 @@ Partial Class MainForm
     Friend WithEvents SaveAsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SaveModelDialog As System.Windows.Forms.SaveFileDialog
     Friend WithEvents FileList As System.Windows.Forms.TreeView
+    Friend WithEvents TestcasesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ADTAzeroth2933ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents WMOHumanFarmToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents M2BloodelfGuardToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents M2HumanMaleToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ADTNorthend3233ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ToolsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ADTExplorerToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ADTNorthend2525ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

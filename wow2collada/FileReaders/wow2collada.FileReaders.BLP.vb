@@ -2,8 +2,6 @@
 Imports System.Collections.Generic
 Imports System.Text
 Imports System.IO
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
 Imports MpqReader
 
 Namespace FileReaders

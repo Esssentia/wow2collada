@@ -12,32 +12,10 @@ Namespace FileReaders
 
         Public Structure sDoodad
             Public ModelFile As String
-            Public Position As Vector3
-            Public Orientation As Quaternion
+            Public Position As sVector3
+            Public Orientation As sQuaternion
             Public Scale As Single
             Public LightingColor As Color
-        End Structure
-
-        ''' <summary>
-        ''' Structure to hold Triangle information (three indices of vertices)
-        ''' </summary>
-        ''' <remarks></remarks>
-        Public Structure sTriangle
-            Public VertexIndex1 As UInt16
-            Public VertexIndex2 As UInt16
-            Public VertexIndex3 As UInt16
-        End Structure
-
-        ''' <summary>
-        ''' Structure to hold Vertex information (Position, Normal, UV Coordinates and Bone-Information)
-        ''' </summary>
-        ''' <remarks></remarks>
-        Public Structure sVertex
-            Public Position As Vector3
-            Public BoneWeights As Byte()
-            Public BoneIndices As Byte()
-            Public Normal As Vector3
-            Public TextureCoords As Vector2
         End Structure
 
         ''' <summary>
@@ -65,8 +43,8 @@ Namespace FileReaders
         Public nSets As UInt32
         Public ambient_color As Color
         Public WMO_ID As UInt32
-        Public BoundingBoxA As Vector3
-        Public BoundingBoxB As Vector3
+        Public BoundingBoxA As sVector3
+        Public BoundingBoxB As sVector3
         Public DoodadSets As sDoodadSet()
         Public Doodads As sDoodad()
         Public Groups As String()
@@ -106,8 +84,8 @@ Namespace FileReaders
                         nSets = br.ReadUInt32
                         ambient_color = Color.FromArgb(red:=br.ReadByte, green:=br.ReadByte, blue:=br.ReadByte, alpha:=br.ReadByte)
                         WMO_ID = br.ReadUInt32
-                        BoundingBoxA = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                        BoundingBoxB = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                        BoundingBoxA = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                        BoundingBoxB = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                         Dim Unknown As UInt32 = br.ReadUInt32
 
                         ReDim Textures(nMaterials - 1)
@@ -156,8 +134,8 @@ Namespace FileReaders
                             Dim idx As UInt32 = br.ReadUInt32
                             'Debug.Print(i & " " & idx & " " & br.BaseStream.Position)
                             Doodads(i).ModelFile = myHF.GetZeroDelimitedString(MODN, idx)
-                            Doodads(i).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            Doodads(i).Orientation = New Quaternion(br.ReadSingle, br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            Doodads(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            Doodads(i).Orientation = New sQuaternion(br.ReadSingle, br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             Doodads(i).Scale = br.ReadSingle
                             Doodads(i).LightingColor = Color.FromArgb(blue:=br.ReadByte, green:=br.ReadByte, red:=br.ReadByte, alpha:=br.ReadByte)
                         Next
@@ -217,22 +195,21 @@ Namespace FileReaders
                     Case "MOVI" ' Triangle Vertex Indices
                         ReDim SubSets(SubSets.Length - 1).Triangles(ChunkLen / 6 - 1)
                         For k As Integer = 0 To ChunkLen / 6 - 1
-                            SubSets(SubSets.Length - 1).Triangles(k).VertexIndex1 = br.ReadUInt16
-                            SubSets(SubSets.Length - 1).Triangles(k).VertexIndex2 = br.ReadUInt16
-                            SubSets(SubSets.Length - 1).Triangles(k).VertexIndex3 = br.ReadUInt16
+                            SubSets(SubSets.Length - 1).Triangles(k) = New sTriangle(br.ReadUInt16, br.ReadUInt16, br.ReadUInt16)
                         Next
 
                     Case "MOVT" ' Vertices
                         ReDim SubSets(SubSets.Length - 1).Vertices(ChunkLen / 12 - 1)
                         For k As Integer = 0 To ChunkLen / 12 - 1
-                            SubSets(SubSets.Length - 1).Vertices(k).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            SubSets(SubSets.Length - 1).Vertices(k) = New sVertex
+                            SubSets(SubSets.Length - 1).Vertices(k).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                         Next
                     Case "MONR" ' Normals
                         If SubSets(SubSets.Length - 1).Vertices.Length <> ChunkLen / 12 Then
                             Debug.Print("Vertex Count Normals doesn't match others... urgh...")
                         Else
                             For k As Integer = 0 To ChunkLen / 12 - 1
-                                SubSets(SubSets.Length - 1).Vertices(k).Normal = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                SubSets(SubSets.Length - 1).Vertices(k).Normal = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             Next
                         End If
 
@@ -241,7 +218,7 @@ Namespace FileReaders
                             Debug.Print("Vertex Count Texture Coordinates doesn't match others... urgh...")
                         Else
                             For k As Integer = 0 To ChunkLen / 8 - 1
-                                SubSets(SubSets.Length - 1).Vertices(k).TextureCoords = New Vector2(br.ReadSingle, br.ReadSingle)
+                                SubSets(SubSets.Length - 1).Vertices(k).TextureCoords = New sVector2(br.ReadSingle, br.ReadSingle)
                             Next
                         End If
 
@@ -302,8 +279,8 @@ Namespace FileReaders
                         nSets = br.ReadUInt32
                         ambient_color = Color.FromArgb(red:=br.ReadByte, green:=br.ReadByte, blue:=br.ReadByte, alpha:=br.ReadByte)
                         WMO_ID = br.ReadUInt32
-                        BoundingBoxA = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                        BoundingBoxB = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                        BoundingBoxA = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                        BoundingBoxB = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                         Dim Unknown As UInt32 = br.ReadUInt32
 
                         ReDim Textures(nMaterials - 1)
@@ -353,8 +330,8 @@ Namespace FileReaders
                             Dim idx As UInt32 = br.ReadUInt32
                             'Debug.Print(i & " " & idx & " " & br.BaseStream.Position)
                             Doodads(i).ModelFile = myHF.GetZeroDelimitedString(MODN, idx)
-                            Doodads(i).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            Doodads(i).Orientation = New Quaternion(br.ReadSingle, br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            Doodads(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            Doodads(i).Orientation = New sQuaternion(br.ReadSingle, br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             Doodads(i).Scale = br.ReadSingle
                             Doodads(i).LightingColor = Color.FromArgb(blue:=br.ReadByte, green:=br.ReadByte, red:=br.ReadByte, alpha:=br.ReadByte)
                         Next
@@ -415,22 +392,22 @@ Namespace FileReaders
                         Case "MOVI" ' Triangle Vertex Indices
                             ReDim SubSets(SubSets.Length - 1).Triangles(ChunkLen / 6 - 1)
                             For k As Integer = 0 To ChunkLen / 6 - 1
-                                SubSets(SubSets.Length - 1).Triangles(k).VertexIndex1 = br.ReadUInt16
-                                SubSets(SubSets.Length - 1).Triangles(k).VertexIndex2 = br.ReadUInt16
-                                SubSets(SubSets.Length - 1).Triangles(k).VertexIndex3 = br.ReadUInt16
+                                SubSets(SubSets.Length - 1).Triangles(k).V1 = br.ReadUInt16
+                                SubSets(SubSets.Length - 1).Triangles(k).V2 = br.ReadUInt16
+                                SubSets(SubSets.Length - 1).Triangles(k).V3 = br.ReadUInt16
                             Next
 
                         Case "MOVT" ' Vertices
                             ReDim SubSets(SubSets.Length - 1).Vertices(ChunkLen / 12 - 1)
                             For k As Integer = 0 To ChunkLen / 12 - 1
-                                SubSets(SubSets.Length - 1).Vertices(k).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                SubSets(SubSets.Length - 1).Vertices(k).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             Next
                         Case "MONR" ' Normals
                             If SubSets(SubSets.Length - 1).Vertices.Length <> ChunkLen / 12 Then
                                 Debug.Print("Vertex Count Normals doesn't match others... urgh...")
                             Else
                                 For k As Integer = 0 To ChunkLen / 12 - 1
-                                    SubSets(SubSets.Length - 1).Vertices(k).Normal = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                    SubSets(SubSets.Length - 1).Vertices(k).Normal = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                                 Next
                             End If
 
@@ -439,7 +416,7 @@ Namespace FileReaders
                                 Debug.Print("Vertex Count Texture Coordinates doesn't match others... urgh...")
                             Else
                                 For k As Integer = 0 To ChunkLen / 8 - 1
-                                    SubSets(SubSets.Length - 1).Vertices(k).TextureCoords = New Vector2(br.ReadSingle, br.ReadSingle)
+                                    SubSets(SubSets.Length - 1).Vertices(k).TextureCoords = New sVector2(br.ReadSingle, br.ReadSingle)
                                 Next
                             End If
 

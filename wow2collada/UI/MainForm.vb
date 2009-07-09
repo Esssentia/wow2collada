@@ -1,6 +1,3 @@
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
-
 Public Class MainForm
 
     Public CurrentTexture As String
@@ -18,7 +15,6 @@ Public Class MainForm
         LoadModelFromMPQ()
     End Sub
 
-
     Private Sub QuitToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles QuitToolStripMenuItem.Click
         Me.Close()
     End Sub
@@ -31,7 +27,7 @@ Public Class MainForm
             ListBox1.Items.Add(Retval(i))
         Next
         TrackBar1.Minimum = 0
-        TrackBar1.Maximum = Math.Max(0, myHF.Textures.Count - 1)
+        TrackBar1.Maximum = Math.Max(0, Models(0).Textures.Count - 1)
         TrackBar1.Value = 0
         TrackBar1_ValueChanged(Me, New System.EventArgs)
         StatusLabel1.Text = CurrentFile
@@ -73,9 +69,9 @@ Public Class MainForm
     Private Sub TrackBar1_ValueChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles TrackBar1.ValueChanged
         Dim i As Integer = TrackBar1.Value
 
-        If i > -1 And i < myHF.Textures.Count Then
-            TextureBox.Image = myHF.Textures.ElementAt(i).Value.TexGra
-            CurrentTexture = myHF.Textures.ElementAt(i).Value.ID
+        If i > -1 And i < Models(0).Textures.Count Then
+            TextureBox.Image = Models(0).Textures.ElementAt(i).Value.TextureMap
+            CurrentTexture = Models(0).Textures.ElementAt(i).Key
         End If
     End Sub
 
@@ -140,7 +136,7 @@ Public Class MainForm
         SaveModelDialog.OverwritePrompt = True
         SaveModelDialog.FileName = FullName
         SaveModelDialog.InitialDirectory = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        SaveModelDialog.Filter = "OBJ File (*.obj)|*.obj|Collada File (*.dae)|*.dae"
+        SaveModelDialog.Filter = "OBJ File (*.obj)|*.obj|Collada File (*.dae)|*.dae|wow2collada File (*.w2c)|*.w2c"
         SaveModelDialog.ShowDialog()
     End Sub
 
@@ -150,12 +146,53 @@ Public Class MainForm
         Dim i As Integer = Fullname.LastIndexOf(".")
         If i > 0 Then Extension = Fullname.Substring(i)
 
-        If Extension = ".obj" Then
-            Dim OBJ As New FileWriters.OBJ
-            OBJ.Save(Fullname, myHF.SubMeshes, myHF.Textures)
-        End If
+        Select Case Extension
+            Case ".obj"
+                Dim OBJ As New FileWriters.OBJ
+                OBJ.Save(Fullname, Models)
+            Case ".w2c"
+                Dim W2C As New FileWriters.W2C
+                W2C.Save(Fullname, Models)
+            Case ".dae"
+                MsgBox("Collada Export not yet implemented.")
+            Case Else
+                MsgBox("Woot?")
+        End Select
+    End Sub
 
-        If Extension = ".dae" Then MsgBox("Collada Export not yet implemented.")
+    Private Sub ADTAzeroth2933ToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ADTAzeroth2933ToolStripMenuItem.Click
+        CurrentFile = "world\maps\azeroth\azeroth_36_49.adt"
+        LoadModelFromMPQ()
+    End Sub
+
+    Private Sub WMOHumanFarmToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles WMOHumanFarmToolStripMenuItem.Click
+        CurrentFile = "world\wmo\azeroth\buildings\human_farm\farm.wmo"
+        LoadModelFromMPQ()
+    End Sub
+
+    Private Sub M2BloodelfGuardToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles M2BloodelfGuardToolStripMenuItem.Click
+        CurrentFile = "creature\bloodelfguard\bloodelfmale_guard.m2"
+        LoadModelFromMPQ()
+    End Sub
+
+    Private Sub M2HumanMaleToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles M2HumanMaleToolStripMenuItem.Click
+        CurrentFile = "character\human\male\humanmale.m2"
+        LoadModelFromMPQ()
+    End Sub
+
+    Private Sub ADTExplorerToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ADTExplorerToolStripMenuItem.Click
+        Dim adt As New ADTExplorer
+        adt.ShowDialog()
+    End Sub
+
+    Private Sub ADTNorthend2525ToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ADTNorthend2525ToolStripMenuItem.Click
+        CurrentFile = "world\maps\northrend\northrend_25_25.adt"
+        LoadModelFromMPQ()
+    End Sub
+
+    Private Sub ADTNorthend3233ToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ADTNorthend3233ToolStripMenuItem.Click
+        CurrentFile = "world\maps\northrend\northrend_32_33.adt"
+        LoadModelFromMPQ()
     End Sub
 
 End Class

@@ -1,8 +1,6 @@
 ﻿Imports System.Windows.Forms
 Imports System.IO
 Imports System.Collections.Generic
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
 
 Public Class OpenWMOOptions
 
@@ -99,8 +97,7 @@ Public Class OpenWMOOptions
         Dim BR As BinaryReader
 
         'reset data structures
-        myHF.Textures.Clear()
-        myHF.SubMeshes.Clear()
+        Models.Clear()
 
         'load and parse Sub WMOs
         StatusLabel1.Text = "Loading Sub-WMO... 0/" & _SubWMO.Count
@@ -119,6 +116,8 @@ Public Class OpenWMOOptions
             _WMO.LoadSub(BR.ReadBytes(BR.BaseStream.Length))
         Next
 
+        Dim Model As New sModel(myHF.GetBaseName(_FileName))
+
         'load textures
         StatusLabel1.Text = "Loading Textures... 0/" & _WMO.Textures.Length
         ProgressBar1.Value = 0
@@ -136,14 +135,9 @@ Public Class OpenWMOOptions
 
             Dim TexFi As String = _WMO.Textures(i).TexID
             If myMPQ.Locate(TexFi) Then
-                If Not myHF.Textures.ContainsKey(TexFi) Then
-                    Dim Tex As New wow2collada.HelperFunctions.sTexture
+                If Not Model.Textures.ContainsKey(TexFi) Then
                     Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                    If Not TexImg Is Nothing Then
-                        Tex.ID = TexFi
-                        Tex.TexGra = TexImg
-                        myHF.Textures(TexFi) = Tex
-                    End If
+                    If Not TexImg Is Nothing Then Model.Textures(TexFi) = New sTexture(TexImg)
                 End If
             End If
         Next
@@ -154,8 +148,6 @@ Public Class OpenWMOOptions
         ProgressBar1.ForeColor = Color.FromArgb(255, 255, 0, 0)
         Application.DoEvents()
 
-        Dim vi As Integer = 0
-        Dim ti As Integer = 0
         For i As Integer = 0 To _WMO.SubSets.Count - 1
 
             StatusLabel1.Text = "Loading Subsets... " & i & "/" & _WMO.SubSets.Length
@@ -164,54 +156,32 @@ Public Class OpenWMOOptions
             Application.DoEvents()
 
             Dim CurrMatID As Integer = -1
-            Dim submesh As HelperFunctions.sSubMesh
-            submesh.TriangleList = New System.Collections.Generic.List(Of HelperFunctions.sTriangle)
-            submesh.TextureList = New System.Collections.Generic.List(Of HelperFunctions.sTextureEntry)
+            Dim submesh As New sSubMesh
+
+            Dim vi As Integer = Model.AddVertices(_WMO.SubSets(i).Vertices)
 
             For j As Integer = 0 To _WMO.SubSets(i).Triangles.Length - 1
                 Dim MatID As Byte = _WMO.SubSets(i).Materials(j)
                 If MatID < _WMO.Textures.Length Then
 
                     If MatID <> CurrMatID Then
-                        If CurrMatID <> -1 Then myHF.SubMeshes.Add(submesh)
+                        If CurrMatID <> -1 Then Model.Meshes.Add(submesh)
                         CurrMatID = MatID
-                        submesh.TriangleList = New System.Collections.Generic.List(Of HelperFunctions.sTriangle)
-                        submesh.TextureList = New System.Collections.Generic.List(Of HelperFunctions.sTextureEntry)
-                        Dim texent As HelperFunctions.sTextureEntry
-                        texent.TextureID = _WMO.Textures(MatID).TexID
-                        texent.flags2 = _WMO.Textures(MatID).Flags
-                        texent.blending2 = _WMO.Textures(MatID).Blending
-                        submesh.TextureList.Add(texent)
+                        submesh = New sSubMesh
+                        submesh.TextureList.Add(New sTextureEntry(_WMO.Textures(MatID).TexID, "", 0, _WMO.Textures(MatID).Flags, 0, _WMO.Textures(MatID).Blending))
+
                     End If
 
-                    Dim Tri As New HelperFunctions.sTriangle
-                    Dim V1 As HelperFunctions.sVertex
-                    Dim V2 As HelperFunctions.sVertex
-                    Dim V3 As HelperFunctions.sVertex
-
                     With _WMO.SubSets(i).Triangles(j)
-                        V1.Position = _WMO.SubSets(i).Vertices(.VertexIndex1).Position
-                        V1.Normal = _WMO.SubSets(i).Vertices(.VertexIndex1).Normal
-                        V1.UV = _WMO.SubSets(i).Vertices(.VertexIndex1).TextureCoords
-
-                        V2.Position = _WMO.SubSets(i).Vertices(.VertexIndex2).Position
-                        V2.Normal = _WMO.SubSets(i).Vertices(.VertexIndex2).Normal
-                        V2.UV = _WMO.SubSets(i).Vertices(.VertexIndex2).TextureCoords
-
-                        V3.Position = _WMO.SubSets(i).Vertices(.VertexIndex3).Position
-                        V3.Normal = _WMO.SubSets(i).Vertices(.VertexIndex3).Normal
-                        V3.UV = _WMO.SubSets(i).Vertices(.VertexIndex3).TextureCoords
-
-                        Tri.P = New HelperFunctions.sVertex() {V1, V2, V3}
-
-                        submesh.TriangleList.Add(Tri)
-
+                        submesh.TriangleList.Add(New sTriangle(vi + .V1, vi + .V2, vi + .V3))
                     End With
                 End If
             Next
 
-            myHF.SubMeshes.Add(submesh)
+            Model.Meshes.Add(submesh)
         Next
+
+        Models.Add(Model)
 
         If _WMO.nDoodads > 0 And LoadDoodads.Checked Then
             For i As Integer = 0 To ListView1.Items.Count - 1
@@ -240,14 +210,7 @@ Public Class OpenWMOOptions
 
                         ListBox1.Items.Add("Doodad: " & .ModelFile.ToLower)
                         ListBox1.SelectedIndex = ListBox1.Items.Count - 1
-
-                        Dim MD20 As New FileReaders.M2
-                        Dim SKIN As New FileReaders.SKIN
-                        Dim FileNameMD20 As String = .ModelFile.Substring(0, .ModelFile.LastIndexOf(".")) + ".m2"
-                        Dim FileNameSKIN As String = .ModelFile.Substring(0, .ModelFile.LastIndexOf(".")) + "00.skin"
-                        MD20.Load(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
-                        SKIN.Load(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
-                        myHF.CreateVertexBufferFromM2(MD20, SKIN, .Position, .Orientation, .Scale)
+                        myHF.AddM2Model(.ModelFile, .Position, .Orientation, .Scale)
                     End If
                 End With
             Next

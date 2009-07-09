@@ -2,7 +2,6 @@
 Imports Tao.OpenGl
 Imports Tao.Platform.Windows
 Imports System.Math
-Imports Tao.DevIl
 Imports wow2collada.HelperFunctions
 
 Public Class RenderFormOpenGL
@@ -15,14 +14,15 @@ Public Class RenderFormOpenGL
     Private Rotate As Boolean = True
     Private DrawWireframe As Boolean = False
     Private DrawTextured As Boolean = True
+    Private DrawBones As Boolean = False
 
     'camera stuff
-    Private CAM_POSITION As Vector3 = New Vector3(0, 3, -24)
-    Private VIEW_VECTOR As Vector3 = New Vector3(0, -0.6, 0.8)
-    Private MOVE_VECTOR As Vector3 = New Vector3(0, 0, 1)
-    Private ROTATION_VECTOR As Vector3 = New Vector3(0, 0, 180)
-    Private RIGHT_VECTOR As Vector3 = New Vector3(1, 0, 0)
-    Private UP_VECTOR As Vector3 = New Vector3(0.08715539, 0.7969557, 0.5977167)
+    Private CAM_POSITION As sVector3 = New sVector3(0, 3, -24)
+    Private VIEW_VECTOR As sVector3 = New sVector3(0, -0.6, 0.8)
+    Private MOVE_VECTOR As sVector3 = New sVector3(0, 0, 1)
+    Private ROTATION_VECTOR As sVector3 = New sVector3(0, 0, 180)
+    Private RIGHT_VECTOR As sVector3 = New sVector3(1, 0, 0)
+    Private UP_VECTOR As sVector3 = New sVector3(0.08715539, 0.7969557, 0.5977167)
 
     'FPS stuff
     Private LastTimeStamp As Integer
@@ -84,12 +84,12 @@ Public Class RenderFormOpenGL
     End Sub
 
     Public Sub ResetView()
-        CAM_POSITION = New Vector3(0, 3, -24)
-        VIEW_VECTOR = New Vector3(0, -0.6, 0.8)
-        MOVE_VECTOR = New Vector3(0, 0, 1)
-        ROTATION_VECTOR = New Vector3(0, 0, 180)
-        RIGHT_VECTOR = New Vector3(1, 0, 0)
-        UP_VECTOR = New Vector3(0.08715539, 0.7969557, 0.5977167)
+        CAM_POSITION = New sVector3(0, 3, -24)
+        VIEW_VECTOR = New sVector3(0, -0.6, 0.8)
+        MOVE_VECTOR = New sVector3(0, 0, 1)
+        ROTATION_VECTOR = New sVector3(0, 0, 180)
+        RIGHT_VECTOR = New sVector3(1, 0, 0)
+        UP_VECTOR = New sVector3(0.08715539, 0.7969557, 0.5977167)
         SetupScene()
         ResizeScene()
     End Sub
@@ -104,6 +104,7 @@ Public Class RenderFormOpenGL
         m_DefaultTexture = My.Resources.DefaultTexture
 
         OpenGLControl.InitializeContexts()
+        Gl.ReloadFunctions()
         Gl.glClearColor(0.0F, 0.0F, 0.0F, 0.0F)
         Gl.glShadeModel(Gl.GL_SMOOTH)
         Gl.glClearDepth(1.0#)
@@ -143,86 +144,123 @@ Public Class RenderFormOpenGL
         If DrawWireframe Then
             Gl.glDisable(Gl.GL_TEXTURE_2D)
             Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_LINE)
-            For Each Submesh As sSubMesh In myHF.SubMeshes
-                Gl.glColor4f(0.2F, 0.2F, 0.2F, 1.0F)
-                Gl.glCallList(Submesh.OpenGLMeshID)
+            Gl.glColor4f(0.2F, 0.2F, 0.2F, 1.0F)
+            For Each Model As sModel In Models
+                For Each Submesh As sSubMesh In Model.Meshes
+                    Gl.glCallList(Submesh.OpenGLMeshID)
+                Next
             Next
+        End If
+
+        If DrawBones Then
+            Gl.glPointSize(3)
+            Gl.glDisable(Gl.GL_TEXTURE_2D)
+            Gl.glColor4f(0.3F, 0.3F, 0.5F, 1.0F)
+            For Each Model As sModel In Models
+                Gl.glCallList(Model.OpenGLBoneMeshID)
+            Next
+            Gl.glPointSize(1)
         End If
 
         If DrawTextured Then
             Gl.glEnable(Gl.GL_TEXTURE_2D)
             Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_FILL)
-            For Each li As ListViewItem In SubSets.Items
-                If li.Checked Then
-                    With myHF.SubMeshes(Val(li.Text))
-                        For Each Tex As sTextureEntry In .TextureList
-                            Select Case Tex.Blending
-                                Case 0 'opaque
-                                    If Tex.Blending2 Then
-                                        Gl.glEnable(Gl.GL_BLEND)
-                                        Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                        Gl.glEnable(Gl.GL_ALPHA_TEST)
-                                        Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
-                                    Else
-                                        Gl.glDisable(Gl.GL_BLEND)
-                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+            For h As Integer = 0 To Models.Count - 1
+                For i As Integer = 0 To Models(h).Meshes.Count - 1
+                    With Models(h).Meshes(i)
+                        If SubSets.Nodes(h).Checked And SubSets.Nodes(h).Nodes(i).Checked Then
+
+                            For j As Integer = 0 To 3
+                                If .TextureList.Count > j Then
+                                    If Not .TextureList.ElementAt(j) Is Nothing Then
+                                        Dim Tex As sTextureEntry = .TextureList.ElementAt(j)
+
+                                        If j > 0 And Tex.AlphaMapID <> "" Then
+                                            Gl.glEnable(Gl.GL_BLEND)
+                                            'Gl.glColor4f(0.0F, 0.0F, 0.0F, 0.0F)
+                                            
+                                            'alphamap first
+                                            Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.AlphaMapID).OpenGLTexID)
+                                            Gl.glCallList(.OpenGLMeshID)
+
+                                            'texture afterwards
+                                            Gl.glBlendFunc(Gl.GL_DST_ALPHA, Gl.GL_DST_COLOR) '  Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
+                                            'Gl.glCallList(.OpenGLMeshID)
+
+                                        Else
+                                            Select Case Tex.Blending1
+                                                Case 0 'opaque
+                                                    If Tex.Blending2 Then
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                        Gl.glEnable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
+                                                    Else
+                                                        Gl.glDisable(Gl.GL_BLEND)
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    End If
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 1 'BM_TRANSPARENT
+                                                    Gl.glEnable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glAlphaFunc(Gl.GL_GEQUAL, 0.7F)
+                                                    Gl.glDisable(Gl.GL_BLEND)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 2 'BM_ALPHA_BLEND
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 3 'BM_ADDITIVE
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_SRC_COLOR, Gl.GL_ONE)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 4 'BM_ADDITIVE_ALPHA
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 5 'BM_MODULATE
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case 6 'BM_MODULATEX2 (not sure if this is right)
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                Case Else
+                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                    Gl.glEnable(Gl.GL_BLEND)
+                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                            End Select
+                                            'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
+                                            If Models(h).Textures.ContainsKey(Tex.TextureID) Then Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
+                                            Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
+                                            Gl.glCallList(.OpenGLMeshID)
+                                        End If
                                     End If
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 1 'BM_TRANSPARENT
-                                    Gl.glEnable(Gl.GL_ALPHA_TEST)
-                                    Gl.glAlphaFunc(Gl.GL_GEQUAL, 0.7F)
-                                    Gl.glDisable(Gl.GL_BLEND)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 2 'BM_ALPHA_BLEND
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 3 'BM_ADDITIVE
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_SRC_COLOR, Gl.GL_ONE)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 4 'BM_ADDITIVE_ALPHA
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 5 'BM_MODULATE
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case 6 'BM_MODULATEX2 (not sure if this is right)
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                Case Else
-                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                    Gl.glEnable(Gl.GL_BLEND)
-                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                            End Select
-                            'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
-
-                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, myHF.Textures(Tex.TextureID).OpenGLTexID)
-                            Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
-                            Gl.glCallList(.OpenGLMeshID)
-
-                        Next
+                                End If
+                            Next
+                        End If
                     End With
-                End If
+                Next
             Next
+
         End If
+            
 
         Gl.glFlush()
         OpenGLControl.Invalidate()
@@ -290,80 +328,127 @@ Public Class RenderFormOpenGL
     End Sub
 
     Sub CreateVertexBuffer()
-        If Not myHF.SubMeshes Is Nothing Then
-            Dim CurrIdx As Integer = 0
+        Dim li As Integer = 1
+        If Not myHF Is Nothing Then
+            If Not Models.Count = 0 Then
 
-            For i As Integer = 0 To myHF.SubMeshes.Count - 1
-                Dim submesh As sSubMesh = myHF.SubMeshes(i)
-                CurrIdx += 1
+                For h As Integer = 0 To Models.Count - 1
+                    With Models(h)
 
-                Gl.glNewList(CurrIdx, Gl.GL_COMPILE)
-                Gl.glBegin(Gl.GL_TRIANGLES)
-                For Each triangle As sTriangle In submesh.TriangleList
-                    For j = 0 To 2
-                        Gl.glTexCoord2f(triangle.P(j).UV.X, triangle.P(j).UV.Y)
-                        Gl.glNormal3f(triangle.P(j).Normal.X, triangle.P(j).Normal.Z, -triangle.P(j).Normal.Y)
-                        Gl.glVertex3f(triangle.P(j).Position.X, triangle.P(j).Position.Z, -triangle.P(j).Position.Y)
-                    Next
+                        Dim VT As List(Of sVertex) = Models(h).VerticesTransformed
+
+                        'meshes
+                        For i As Integer = 0 To .Meshes.Count - 1
+                            Dim submesh As sSubMesh = .Meshes(i)
+
+                            Gl.glNewList(li, Gl.GL_COMPILE)
+                            Gl.glBegin(Gl.GL_TRIANGLES)
+                            For j As Integer = 0 To submesh.TriangleList.Count - 1
+                                Dim triangle As sTriangle = submesh.TriangleList(j)
+                                For k As Integer = 0 To 2
+                                    Gl.glTexCoord2f(VT(triangle.Vertices(k)).TextureCoords.U, VT(triangle.Vertices(k)).TextureCoords.V)
+                                    Gl.glNormal3f(VT(triangle.Vertices(k)).Normal.X, VT(triangle.Vertices(k)).Normal.Z, -VT(triangle.Vertices(k)).Normal.Y)
+                                    Gl.glVertex3f(VT(triangle.Vertices(k)).Position.X, VT(triangle.Vertices(k)).Position.Z, -VT(triangle.Vertices(k)).Position.Y)
+                                Next
+                            Next
+                            Models(h).Meshes(i).OpenGLMeshID = li
+                            Gl.glEnd()
+                            Gl.glEndList()
+                            li += 1
+                        Next
+
+                        'bones
+                        If Not .Bones Is Nothing Then
+                            Gl.glNewList(li, Gl.GL_COMPILE)
+                            Gl.glBegin(Gl.GL_POINTS)
+                            For i As Integer = 0 To .Bones.Count - 1
+                                Dim Bone As sBone = .Bones(i)
+                                Dim x As Single = Bone.PivotPoint.X
+                                Dim y As Single = Bone.PivotPoint.Z
+                                Dim z As Single = -Bone.PivotPoint.Y
+
+                                If Bone.ParentBone <> -1 And Bone.ParentBone < 65535 Then
+                                    x += .Bones(Bone.ParentBone).PivotPoint.X
+                                    y += .Bones(Bone.ParentBone).PivotPoint.Z
+                                    z -= .Bones(Bone.ParentBone).PivotPoint.Y
+                                End If
+
+                                Gl.glVertex3f(.Bones(i).PivotPoint.X, .Bones(i).PivotPoint.Z, -.Bones(i).PivotPoint.Y)
+                            Next
+                            .OpenGLBoneMeshID = li
+                            Gl.glEnd()
+                            Gl.glEndList()
+                            li += 1
+                        End If
+                    End With
                 Next
-                submesh.OpenGLMeshID = CurrIdx
-                myHF.SubMeshes(i) = submesh
-                Gl.glEnd()
-                Gl.glEndList()
-
-            Next
+            End If
         End If
+
     End Sub
 
     Sub CreateTextureList()
         If Not myHF Is Nothing Then
-            'dispose of the texture objects in OpenGL
-            For Each texture As sTexture In myHF.Textures.Values
-                Gl.glDeleteTextures(1, texture.OpenGLTexID)
-            Next
+            If Not Models.Count = 0 Then
 
-            'create OpenGL textures 
-            For i As Integer = 0 To myHF.Textures.Count - 1
-                Dim TexsID As String = myHF.Textures.ElementAt(i).Key
-                Dim Tex As sTexture = myHF.Textures.ElementAt(i).Value
+                'dispose of the texture objects in OpenGL
+                For h As Integer = 0 To Models.Count - 1
+                    For Each texture As sTexture In Models(h).Textures.Values
+                        Gl.glDeleteTextures(1, texture.OpenGLTexID)
+                    Next
+                Next
 
-                If Not myHF.Textures(TexsID).TexGra Is Nothing Then
-                    Dim TexiID As Integer
-                    Dim bitmapdata As Imaging.BitmapData
-                    Dim rect As Rectangle = New Rectangle(0, 0, Tex.TexGra.Width, Tex.TexGra.Height)
+                'create OpenGL textures 
+                For h As Integer = 0 To Models.Count - 1
+                    For i As Integer = 0 To Models(h).Textures.Count - 1
+                        Dim TexsID As String = Models(h).Textures.ElementAt(i).Key
+                        Dim Tex As sTexture = Models(h).Textures.ElementAt(i).Value
 
-                    bitmapdata = Tex.TexGra.LockBits(rect, Imaging.ImageLockMode.ReadOnly, Imaging.PixelFormat.Format32bppArgb)
-                    Gl.glGenTextures(1, TexiID)
-                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, TexiID)
-                    Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, Tex.TexGra.Width, Tex.TexGra.Height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0)
-                    Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR)
-                    Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR)
-                    'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
-                    Tex.TexGra.UnlockBits(bitmapdata)
-                    Tex.OpenGLTexID = TexiID
-                    myHF.Textures(TexsID) = Tex
-                    Debug.Print(String.Format("Added Texture: {0} -> {1}", TexiID, TexsID))
-                Else
-                    Debug.Print(String.Format("Problem with Texture: {0}", TexsID))
-                End If
+                        If Not Models(h).Textures(TexsID).TextureMap Is Nothing Then
+                            Dim TexiID As Integer
+                            Dim bitmapdata As Imaging.BitmapData
+                            Dim rect As Rectangle = New Rectangle(0, 0, Tex.TextureMap.Width, Tex.TextureMap.Height)
+
+                            bitmapdata = Tex.TextureMap.LockBits(rect, Imaging.ImageLockMode.ReadOnly, Imaging.PixelFormat.Format32bppArgb)
+                            Gl.glGenTextures(1, TexiID)
+                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, TexiID)
+                            Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, Tex.TextureMap.Width, Tex.TextureMap.Height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0)
+                            Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR)
+                            Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR)
+                            'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
+                            Tex.TextureMap.UnlockBits(bitmapdata)
+                            Tex.OpenGLTexID = TexiID
+                            Models(h).SetOpenGLTextureID(TexsID, TexiID)
+                            'Debug.Print(String.Format("Added Texture: {0} -> {1}", TexiID, TexsID))
+                        Else
+                            Debug.Print(String.Format("Problem with Texture: {0}", TexsID))
+                        End If
+                    Next
+                Next
+            End If
+        End If
+    End Sub
+
+    Sub SetupScene()
+        SubSets.Nodes.Clear()
+
+        If Models.Count > 0 Then
+            CreateTextureList()
+            CreateVertexBuffer()
+
+            For h As Integer = 0 To Models.Count - 1
+                Dim n As TreeNode = SubSets.Nodes.Add(Models(h).Name)
+                n.Checked = True
+                For i As Integer = 0 To Models(h).Meshes.Count - 1
+                    Dim sn As TreeNode = n.Nodes.Add(i)
+                    sn.Checked = True
+                Next
             Next
 
         End If
     End Sub
 
-    Sub SetupScene()
-        CreateTextureList()
-        CreateVertexBuffer()
-
-        SubSets.Items.Clear()
-        For i As Integer = 0 To myHF.SubMeshes.Count - 1
-            SubSets.Items.Add(i)
-            SubSets.Items(SubSets.Items.Count - 1).Checked = True
-        Next
-
-    End Sub
-
-    Sub Camera_Move(ByVal Direction As Vector3)
+    Sub Camera_Move(ByVal Direction As sVector3)
         CAM_POSITION += Direction
         ResizeScene()
     End Sub
@@ -372,10 +457,10 @@ Public Class RenderFormOpenGL
         ROTATION_VECTOR.X += Angle
 
         'Rotate viewdir around the right vector:
-        VIEW_VECTOR = Vector3.Normalize(VIEW_VECTOR * Math.Cos(Angle * Math.PI / 180) + UP_VECTOR * Math.Sin(Angle * Math.PI / 180))
+        VIEW_VECTOR = sVector3.Normalize(VIEW_VECTOR * Math.Cos(Angle * Math.PI / 180) + UP_VECTOR * Math.Sin(Angle * Math.PI / 180))
 
         'Now compute the new UP_VECTOR (by cross product)
-        UP_VECTOR = Vector3.Cross(VIEW_VECTOR, RIGHT_VECTOR) * -1
+        UP_VECTOR = sVector3.Cross(VIEW_VECTOR, RIGHT_VECTOR) * -1
         ResizeScene()
     End Sub
 
@@ -383,10 +468,10 @@ Public Class RenderFormOpenGL
         ROTATION_VECTOR.Y += Angle
 
         'Rotate viewdir around the up vector:
-        VIEW_VECTOR = Vector3.Normalize(VIEW_VECTOR * Math.Cos(Angle * Math.PI / 180) - RIGHT_VECTOR * Math.Sin(Angle * Math.PI / 180))
+        VIEW_VECTOR = sVector3.Normalize(VIEW_VECTOR * Math.Cos(Angle * Math.PI / 180) - RIGHT_VECTOR * Math.Sin(Angle * Math.PI / 180))
 
         'Now compute the new RIGHT_VECTOR (by cross product)
-        RIGHT_VECTOR = Vector3.Cross(VIEW_VECTOR, UP_VECTOR)
+        RIGHT_VECTOR = sVector3.Cross(VIEW_VECTOR, UP_VECTOR)
         ResizeScene()
     End Sub
 
@@ -394,10 +479,10 @@ Public Class RenderFormOpenGL
         ROTATION_VECTOR.Z += Angle
 
         'Rotate viewdir around the right vector:
-        RIGHT_VECTOR = Vector3.Normalize(RIGHT_VECTOR * Math.Cos(Angle * Math.PI / 180) + UP_VECTOR * Math.Sin(Angle * Math.PI / 180))
+        RIGHT_VECTOR = sVector3.Normalize(RIGHT_VECTOR * Math.Cos(Angle * Math.PI / 180) + UP_VECTOR * Math.Sin(Angle * Math.PI / 180))
 
         'Now compute the new UP_VECTOR (by cross product)
-        UP_VECTOR = Vector3.Cross(VIEW_VECTOR, RIGHT_VECTOR) * -1
+        UP_VECTOR = sVector3.Cross(VIEW_VECTOR, RIGHT_VECTOR) * -1
         ResizeScene()
     End Sub
 
@@ -423,6 +508,11 @@ Public Class RenderFormOpenGL
 
     Public Sub SetFileName(ByVal FileName As String)
         LabelFile.Text = FileName
+    End Sub
+
+    Private Sub BonesToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BonesToolStripMenuItem.Click
+        BonesToolStripMenuItem.Checked = Not BonesToolStripMenuItem.Checked
+        DrawBones = BonesToolStripMenuItem.Checked
     End Sub
 
 End Class

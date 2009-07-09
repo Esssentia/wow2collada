@@ -97,7 +97,7 @@ Namespace FileReaders
                         If a.Path.LastIndexOf(".") > 0 Then
                             If a.Path.IndexOf("world of warcraft launcher.app") <> 0 And a.Path.IndexOf("world of warcraft.app") <> 0 And a.Path.IndexOf("background downloader.app") <> 0 Then
                                 Select Case a.Path.Substring(a.Path.LastIndexOf("."))
-                                    Case ".m2", ".adt"
+                                    Case ".m2", ".adt", ".blp", ".wav", ".mp3", ".trs"
                                         Dim Parts As String() = a.Path.Split("\")
                                         Dim parent As wow2collada.FileReaders.Node = FileTree
                                         For k As Integer = 0 To Parts.Count - 1
@@ -118,7 +118,7 @@ Namespace FileReaders
 
                                     Case ".anim", ".skin", ".lua", ".xml", ".sig", ".txt", ".exe", ".toc", ".zmp", ".ini", ".dll", ".sbt", ".ttf", ".dbc"
                                     Case ".xsd", ".wdl", ".wdt", ".icns", ".xib", ".nib", ".wtf", ".rsrc", ".bls", ".html", ".pdf", ".js", ".jpg", ".wfx"
-                                    Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif", ".blp", ".wav", ".mp3"
+                                    Case ".db", ".test", ".not", ".trs", ".plist", ".tiff", ".png", ".css", ".url", ".manifest", ".gif"
                                         'ignore... (don't allow user to select those directly as it would be pointless, kind of, we are NOT in the business of MPQ Explorer)
                                     Case Else
                                         'unknown file type? Oo
@@ -153,7 +153,7 @@ Namespace FileReaders
         Public Function LocateMPQ(ByVal path As String) As String
             If path Is Nothing Then Return ""
             If Not Locate(path) Then Return ""
-            Return FileList(path).Archive
+            Return FileList(path.ToLower).Archive
         End Function
 
         ''' <summary>
