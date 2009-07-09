@@ -20,7 +20,7 @@ Namespace FileReaders
             Public StartBones As UInt16
             Public nBones As UInt16
             Public RootBone As UInt16
-            Public Position As Vector3
+            Public Position As sVector3
         End Structure
 
         Public Structure sTextureUnit
@@ -105,9 +105,7 @@ Namespace FileReaders
                 SubMeshes(i).StartBones = br.ReadUInt16
                 Dim Unknown0 As UInt16 = br.ReadUInt16
                 SubMeshes(i).RootBone = br.ReadUInt16
-                SubMeshes(i).Position.X = br.ReadSingle
-                SubMeshes(i).Position.Y = br.ReadSingle
-                SubMeshes(i).Position.Z = br.ReadSingle
+                SubMeshes(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                 Dim Unknown1 As Single = br.ReadSingle
                 Dim Unknown2 As Single = br.ReadSingle
                 Dim Unknown3 As Single = br.ReadSingle
@@ -155,18 +153,6 @@ Namespace FileReaders
             Public VertexIndex3 As UInt16
         End Structure
 
-        ''' <summary>
-        ''' Structure to hold Vertex information (Position, Normal, UV Coordinates and Bone-Information)
-        ''' </summary>
-        ''' <remarks></remarks>
-        Public Structure sVertex
-            Public Position As Vector3
-            Public BoneWeights As Byte()
-            Public BoneIndices As Byte()
-            Public Normal As Vector3
-            Public TextureCoords As Vector2
-        End Structure
-
         Public Structure sTexture
             Public Type As UInt32
             Public Flags As UInt16
@@ -181,22 +167,11 @@ Namespace FileReaders
             Public Length As Integer
             Public MovingSpeed As Single
             Public PlaybackSpeed As Integer
-            Public BoundingBox1 As Vector3
-            Public BoundingBox2 As Vector3
+            Public BoundingBox1 As sVector3
+            Public BoundingBox2 As sVector3
             Public Radius As Single
             Public NextAnimationID As Integer
             Public Index As Integer
-        End Structure
-
-        Public Structure sBones
-            Public AnimationSequence As Integer
-            Public Flags As Integer
-            Public ParentBone As Integer
-            Public GeosetID As Integer
-            Public Translation As Vector3
-            Public Rotation As Quaternion
-            Public Scaling As Vector3
-            Public PivotPoint As Vector3
         End Structure
 
         Public Structure sRenderFlag
@@ -212,7 +187,7 @@ Namespace FileReaders
         Public TextureLookup As UInt16()
         Public AnimationSequences As sAnimationSequence()
         Public AnimationLookup As Integer()
-        Public Bones As sBones()
+        Public Bones As sBone()
         Public BoneLookup As Integer()
         Public KeyBoneLookup As Integer()
         Public RenderFlags As sRenderFlag()
@@ -299,11 +274,12 @@ Namespace FileReaders
             ReDim Vertices(nVertices - 1)
             br.BaseStream.Position = ofsVertices
             For i As Integer = 0 To nVertices - 1
-                Vertices(i).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                Vertices(i) = New sVertex()
+                Vertices(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                 Vertices(i).BoneWeights = New Byte() {br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte}
-                Vertices(i).BoneIndices = New Byte() {br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte}
-                Vertices(i).Normal = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                Vertices(i).TextureCoords = New Vector2(br.ReadSingle, br.ReadSingle)
+                Vertices(i).Boneindices = New Byte() {br.ReadByte, br.ReadByte, br.ReadByte, br.ReadByte}
+                Vertices(i).Normal = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                Vertices(i).TextureCoords = New sVector2(br.ReadSingle, br.ReadSingle)
                 Dim Unknown1 As Single = br.ReadSingle
                 Dim Unknown2 As Single = br.ReadSingle
             Next
@@ -328,15 +304,27 @@ Namespace FileReaders
 
             For i As Integer = 0 To nTextures - 1
                 Select Case Textures(i).Type
-                    Case 0
+                    Case 0 'texture defined by filename
                         br.BaseStream.Position = Textures(i).ofsFilename
                         Textures(i).Filename = br.ReadChars(Textures(i).lenFilename - 1) 'length includes trailing chr(0)
                         Textures(i).Filename = Textures(i).Filename.ToLower
-                    Case 11, 12, 13
+                    Case 1 'Body and clothes
+                        'Get From CharSections.dbc
+                        Dim s As Dictionary(Of String, String()) = myDBC.GetTexturesByRaceGender(myDBC.M2PathToRaceID(FileName), myDBC.M2PathToGender(FileName))
+                        Textures(i).Filename = s("skin")(0)
+                    Case 2 'Cape
+                    Case 6 'Hair and Beard
+                        'Get From CharSections.dbc
+                        Dim s As Dictionary(Of String, String()) = myDBC.GetTexturesByRaceGender(myDBC.M2PathToRaceID(FileName), myDBC.M2PathToGender(FileName))
+                        Textures(i).Filename = s("hair")(0)
+                    Case 8 'Tauren Fur
+                    Case 11, 12, 13 'Skin for creatures
                         Dim ID As UInt32 = myDBC.GetIDFromModelFileName(FileName)
                         Dim Tex As String = myDBC.GetTextureFromCreatureModelID(ID, Textures(i).Type)
                         Dim s As String = (FileName.Substring(0, FileName.LastIndexOf("\") + 1) & Tex & ".blp").ToLower
                         Textures(i).Filename = s
+                    Case Else
+                        Debug.Print(Textures(i).Type)
                 End Select
             Next
 
@@ -351,8 +339,8 @@ Namespace FileReaders
                     .MovingSpeed = br.ReadSingle
                     br.BaseStream.Position = br.BaseStream.Position + 4 * 4 'skip for uint32 (unknown)
                     .PlaybackSpeed = br.ReadUInt32
-                    .BoundingBox1 = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                    .BoundingBox2 = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .BoundingBox1 = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .BoundingBox2 = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                     .Radius = br.ReadSingle
                     .NextAnimationID = br.ReadUInt16
                     .Index = br.ReadUInt16
@@ -372,16 +360,24 @@ Namespace FileReaders
             ReDim Bones(nBones - 1)
             br.BaseStream.Position = ofsBones
             For i As Integer = 0 To nBones - 1
-                With Bones(i)
-                    .AnimationSequence = myHF.CatchOverflow(br.ReadUInt32)
-                    .Flags = myHF.CatchOverflow(br.ReadUInt32)
-                    .ParentBone = br.ReadUInt16
-                    .GeosetID = br.ReadUInt16
-                    .Translation = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                    .Rotation = New Quaternion(myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16))
-                    .Scaling = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                    .PivotPoint = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                Dim Bone As New sBone
+                With Bone
+                    .AnimationSequence = br.ReadInt32
+                    .Flags = br.ReadInt32
+                    .ParentBone = br.ReadInt16
+                    br.BaseStream.Position = br.BaseStream.Position + 2
+                    .GeosetID = br.ReadInt16
+                    br.BaseStream.Position = br.BaseStream.Position + 2
+                    .Translation = New sAnimBlock(br.ReadInt16, br.ReadInt16, br.ReadInt32, br.ReadInt32, br.ReadInt32, br.ReadInt32)
+                    '.Translation = New sAnimBlock(br.ReadUInt16, br.ReadUInt16, br.ReadUInt32, br.ReadUInt32, br.ReadUInt32, br.ReadUInt32)
+                    .Rotation = New sAnimBlock(br.ReadInt16, br.ReadInt16, br.ReadInt32, br.ReadInt32, br.ReadInt32, br.ReadInt32)
+                    .Scaling = New sAnimBlock(br.ReadInt16, br.ReadInt16, br.ReadInt32, br.ReadInt32, br.ReadInt32, br.ReadInt32)
+                    '.Translation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    '.Rotation = New sQuaternion(myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16), myHF.ShortToSingle(br.ReadUInt16))
+                    '.Scaling = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                    .PivotPoint = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                 End With
+                Bones(i) = Bone
             Next i
 
             'bone lookup table

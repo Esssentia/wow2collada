@@ -2,9 +2,8 @@
 Imports System.Collections.Generic
 Imports System.Text
 Imports System.IO
-Imports Microsoft.DirectX
-Imports Microsoft.DirectX.Direct3D
 Imports MpqReader
+Imports wow2collada.HelperFunctions
 
 Namespace FileReaders
 
@@ -20,18 +19,18 @@ Namespace FileReaders
         Public Structure sM2Placement
             Public MMDX_ID As UInt32
             Public ID As UInt32
-            Public Position As Vector3
-            Public Orientation As Vector3
+            Public Position As sVector3
+            Public Orientation As sVector3
             Public Scale As Single
         End Structure
 
         Public Structure sWMOPlacement
             Public MWMO_ID As UInt32
             Public ID As UInt32
-            Public Position As Vector3
-            Public Orientation As Vector3
-            Public UpperExtents As Vector3
-            Public LowerExtents As Vector3
+            Public Position As sVector3
+            Public Orientation As sVector3
+            Public UpperExtents As sVector3
+            Public LowerExtents As sVector3
             Public DoodadSetIndex As UInt16
             Public NameSetIndex As UInt32
         End Structure
@@ -57,12 +56,12 @@ Namespace FileReaders
             Dim nSndEmitters As UInt32
             Dim offsLiquid As UInt32
             Dim sizeLiquid As UInt32
-            Dim Position As Vector3
+            Dim Position As sVector3
             Dim offsColorValues As UInt32
             Dim props As UInt32
             Dim effectId As UInt32
             Dim HeightMap As Single()
-            Dim NormalMap As Vector3()
+            Dim NormalMap As sVector3()
             Dim Layer As sLayer()
             Dim AlphaMaps As Bitmap()
             Dim HeightMap9x9 As Single(,)
@@ -120,9 +119,10 @@ Namespace FileReaders
                         For i As Integer = 0 To ChunkLen / 36 - 1
                             M2Placements(i).MMDX_ID = br.ReadUInt32
                             M2Placements(i).ID = br.ReadUInt32
-                            M2Placements(i).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            M2Placements(i).Orientation = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            M2Placements(i).Scale = br.ReadUInt32 / 1024
+                            M2Placements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            M2Placements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            M2Placements(i).Scale = br.ReadUInt16 / 1024.0F
+                            Dim Unknown As UInt16 = br.ReadUInt16
                         Next
 
                     Case "MODF" 'WMO placements
@@ -130,10 +130,10 @@ Namespace FileReaders
                         For i As Integer = 0 To ChunkLen / 64 - 1
                             WMOPlacements(i).MWMO_ID = br.ReadUInt32
                             WMOPlacements(i).ID = br.ReadUInt32
-                            WMOPlacements(i).Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).Orientation = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).UpperExtents = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).LowerExtents = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            WMOPlacements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            WMOPlacements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            WMOPlacements(i).UpperExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                            WMOPlacements(i).LowerExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                             Dim Unknown As UInt16 = br.ReadUInt16
                             WMOPlacements(i).DoodadSetIndex = br.ReadUInt16
                             WMOPlacements(i).NameSetIndex = br.ReadUInt32
@@ -193,7 +193,7 @@ Namespace FileReaders
                 .nSndEmitters = br.ReadUInt32
                 .offsLiquid = br.ReadUInt32
                 .sizeLiquid = br.ReadUInt32
-                .Position = New Vector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                .Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
                 .offsColorValues = br.ReadUInt32
                 .props = br.ReadUInt32
                 .effectId = br.ReadUInt32
@@ -223,7 +223,7 @@ Namespace FileReaders
                 ReDim .NormalMap(144)
 
                 For i As Integer = 0 To 144
-                    .NormalMap(i) = New Vector3(br.ReadSByte / 127, br.ReadSByte / 127, br.ReadSByte / 127)
+                    .NormalMap(i) = New sVector3(br.ReadSByte / 127, br.ReadSByte / 127, br.ReadSByte / 127)
                 Next
 
                 'MCLY subchunk
@@ -254,25 +254,34 @@ Namespace FileReaders
                 For i As Integer = 0 To 3
                     If .Layer(i).TextureID > 0 Then
                         If .Layer(i).Flags And &H100 Then 'use alpha map
-                            Dim Buffer(2047) As Byte
+                            Dim Buffer(4095) As Byte
                             If .Layer(i).Flags And &H200 Then 'compressed alpha
-                                Dim offO = 0
-                                While offO < 2048
+                                Dim offO As Integer = 0
+                                While offO < 4096
                                     Dim b1 As Byte = br.ReadByte
                                     Dim b2 As Byte = br.ReadByte
-                                    Dim fill As Boolean = b1 > 127
-                                    Dim n As Integer = b1 And &H7F
-                                    For k As Integer = 0 To n - 1
-                                        Buffer(offO) = b2
-                                        offO += 1
+                                    Dim count As Integer = b1 And &H7F
+                                    Dim fill As Boolean = (b1 > 127)
+
+                                    For k As Integer = 0 To count - 1
+                                        If offO < 4096 Then
+                                            Buffer(offO) = b2
+                                            offO += 1
+                                        Else
+                                            Debug.Print(String.Format("Compressed Alpha Weirdness: Bufferpos {0} / Bufferval {1}", offO, b2))
+                                            k = count
+                                        End If
                                         If Not fill Then b2 = br.ReadByte
                                     Next
+
                                 End While
+                                .AlphaMaps(i) = BytesToAlphaBitmapCompressed(Buffer)
                             Else 'uncompressed alpha
                                 Buffer = br.ReadBytes(2048)
+                                .AlphaMaps(i) = BytesToAlphaBitmapUncompressed(Buffer)
                             End If
 
-                            .AlphaMaps(i) = BytesToAlphaBitmap(Buffer)
+
                         End If
                     End If
                 Next
@@ -303,7 +312,7 @@ Namespace FileReaders
 
             For r As Integer = 0 To 8
                 For c As Integer = 0 To 8
-                    Out(r, c) = HeightMap(r * 17 + c)
+                    Out(r, c) = HeightMap(c * 17 + r)
                 Next
             Next
 
@@ -333,14 +342,14 @@ Namespace FileReaders
 
             For r As Integer = 0 To 7
                 For c As Integer = 0 To 7
-                    Out(r, c) = HeightMap(9 + r * 17 + c)
+                    Out(r, c) = HeightMap(9 + c * 17 + r)
                 Next
             Next
 
             Return Out
         End Function
 
-        Private Function BytesToAlphaBitmap(ByVal buffer As Byte())
+        Private Function BytesToAlphaBitmapUncompressed(ByVal buffer As Byte())
             Dim Out As New Bitmap(64, 64, Imaging.PixelFormat.Format32bppArgb)
 
             For y As Integer = 0 To 63
@@ -348,7 +357,20 @@ Namespace FileReaders
                     Dim b As Byte = buffer(x + y * 32)
                     Out.SetPixel(x * 2 + 1, y, Color.FromArgb(b And &HF0, 0, 0, 0))
                     Out.SetPixel(x * 2, y, Color.FromArgb(b << 4 And &HF0, 0, 0, 0))
-                    'Debug.Print((x + y * 32) & " " & x & " " & y)
+                    'Debug.Print((b And &HF0) & " " & (b << 4 And &HF0))
+                Next
+            Next
+
+            Return Out
+        End Function
+
+        Private Function BytesToAlphaBitmapCompressed(ByVal buffer As Byte())
+            Dim Out As New Bitmap(64, 64, Imaging.PixelFormat.Format32bppArgb)
+
+            For y As Integer = 0 To 63
+                For x As Integer = 0 To 63
+                    Dim b As Byte = buffer(x + y * 64)
+                    Out.SetPixel(x, y, Color.FromArgb(b, 0, 0, 0))
                 Next
             Next
 
