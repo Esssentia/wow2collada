@@ -2,7 +2,7 @@
 
 Namespace FileReaders
 
-    Class WMO
+    Public Class WMO
 
         Public Structure sDoodadSet
             Public name As String

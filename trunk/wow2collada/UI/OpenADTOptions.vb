@@ -1,8 +1,6 @@
 ﻿Imports System.Windows.Forms
 Imports System.IO
 Imports System.Collections.Generic
-Imports System.Runtime.InteropServices
-Imports System.Drawing.Imaging
 Imports wow2collada.HelperFunctions
 
 Public Class OpenADTOptions
@@ -104,17 +102,29 @@ Public Class OpenADTOptions
         Application.DoEvents()
 
         Dim BLP As New FileReaders.BLP
+        Dim Key As String
 
-        'synthesize textures
-        For i As Integer = 0 To 7
-            For j As Integer = 0 To 7
-                StatusLabel1.Text = "Synthesizing Textures... " & i * 8 + j & "/" & 256
+        'add all texture
+        For i As Integer = 0 To 15
+            For j As Integer = 0 To 15
+                StatusLabel1.Text = "Loading Textures... " & i * 8 + j & "/" & 256
                 ProgressBar1.Value = 100 * (i * 8 + j) / 256
                 ProgressBar1.ForeColor = Color.FromArgb(255, 255 - 255 * ProgressBar1.Value / 100, 255 * ProgressBar1.Value / 100, 0)
                 Application.DoEvents()
 
-                Dim TexKey As String = "Combined_" & i.ToString("00") & j.ToString("00")
-                'model.Textures.Add(TexKey, New sTexture(Blend(i, j)))
+                For k = 0 To 3
+                    If Not _ADT.MCNKs(i, j).AlphaMaps(k) Is Nothing Then
+                        Key = "Alpha_" & i.ToString("00") & "_" & j.ToString("00") & "_" & k.ToString("00")
+                        If Not model.Textures.ContainsKey(Key) Then model.Textures.Add(Key, New sTexture(_ADT.MCNKs(i, j).AlphaMaps(k)))
+                    End If
+
+                    Key = _ADT.TextureFiles(_ADT.MCNKs(i, j).Layer(k).TextureID)
+                    If Not model.Textures.ContainsKey(Key) Then
+                        If myMPQ.Locate(Key) Then
+                            model.Textures.Add(Key, New sTexture(BLP.LoadFromStream(myMPQ.LoadFile(Key), Key)))
+                        End If
+                    End If
+                Next
             Next
         Next
 
@@ -201,9 +211,22 @@ Public Class OpenADTOptions
                     Dim zo As Single = .Position.Z
                     Dim xt As Single
                     Dim yt As Single
-                    Dim TexKey As String = "Combined_" & i.ToString("00") & j.ToString("00")
                     Dim SubMesh As New sSubMesh
-                    SubMesh.TextureList.Add(New sTextureEntry(TexKey, "", 0, 0, 0, 0))
+
+                    SubMesh.isADT = True
+                    SubMesh.isWotLK = Not .preWotLK
+
+                    For k = 0 To 3
+                        If Not _ADT.MCNKs(i, j).AlphaMaps(k) Is Nothing Then
+                            Key = "Alpha_" & i.ToString("00") & "_" & j.ToString("00") & "_" & k.ToString("00")
+                            SubMesh.TextureList.Add(New sTextureEntry(Key, "", 0, 0, 0, 0, "Alpha" & k.ToString("0")))
+                        End If
+
+                        Key = _ADT.TextureFiles(_ADT.MCNKs(i, j).Layer(k).TextureID)
+                        If myMPQ.Locate(Key) Then
+                            SubMesh.TextureList.Add(New sTextureEntry(Key, "", 0, 0, 0, 0, "Layer" & k.ToString("0")))
+                        End If
+                    Next
 
                     For x As Integer = 0 To 7
                         Dim xr As Single = xo + x * dx
@@ -356,66 +379,11 @@ Public Class OpenADTOptions
     End Function
 
     Private Sub SaveADTDialog_FileOk(ByVal sender As System.Object, ByVal e As System.ComponentModel.CancelEventArgs) Handles SaveADTDialog.FileOk
-        Dim BLP As New FileReaders.BLP
-
         Dim Fullname As String = SaveADTDialog.FileName
-        Dim Directory As String = myHF.GetBasePath(Fullname)
-        Dim Lines As New List(Of String)
-        Dim n As Integer
-
-        Lines.Clear()
-        For Each Tex As String In _ADT.TextureFiles
-            Lines.Add(n.ToString("000") & " " & Tex)
-            n += 1
-        Next
-
-        File.WriteAllLines(Directory & "/textures.txt", Lines.ToArray)
-
-        Depthmap(Directory & "/")
-
-        For x As Integer = 0 To 15
-            For y As Integer = 0 To 15
-                Dim ChunkID As String = "(" & x.ToString("00") & "," & y.ToString("00") & ")"
-                With _ADT.MCNKs(x, y)
-
-                    n = 0
-                    For Each Map As Bitmap In .AlphaMaps
-                        If Not Map Is Nothing Then
-                            Map.Save(Directory & "/" & ChunkID & "_alpha" & n.ToString("00") & ".png", ImageFormat.Png)
-                        End If
-                        n += 1
-                    Next
-
-                    n = 0
-                    Lines.Clear()
-                    For Each Layer As FileReaders.ADT.sLayer In .Layer
-                        If n = 0 Or Not .AlphaMaps(n) Is Nothing Then
-                            Dim ID As Integer = Layer.TextureID
-                            Dim Tex As String = _ADT.TextureFiles(ID)
-                            Lines.Add(n.ToString("000") & " " & Tex)
-                        End If
-                        n += 1
-                    Next
-                    File.WriteAllLines(Directory & "/" & ChunkID & "_layers.txt", Lines.ToArray)
-
-                    Application.DoEvents()
-                    If x = y And False Then
-                        Dim timer As Long = Now.Ticks
-                        Blend(x, y, Directory & "/" & ChunkID).Save(Directory & "/" & ChunkID & "_combined.png", ImageFormat.Png)
-                        Debug.Print("(" & x.ToString("00") & "/" & y.ToString("00") & "): " & CSng(Now.Ticks - timer) / 10000000)
-                    End If
-                End With
-            Next
-        Next
-
-        For i As Integer = 0 To _ADT.TextureFiles.Length - 1
-            Dim TexFi As String = _ADT.TextureFiles(i)
-            If myMPQ.Locate(TexFi) Then
-                Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                If Not TexImg Is Nothing Then TexImg.Save(Directory & "/" & myHF.GetBaseName(TexFi) & ".png", System.Drawing.Imaging.ImageFormat.Png)
-            End If
-        Next
-
+        Dim DumpADTDialog As New DumpADT
+        DumpADTDialog.Filename = SaveADTDialog.FileName
+        DumpADTDialog.ADT = _ADT
+        DumpADTDialog.ShowDialog()
     End Sub
 
     Private Sub DumpADTToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles DumpADTToolStripMenuItem.Click
@@ -431,282 +399,5 @@ Public Class OpenADTOptions
         SaveADTDialog.Filter = "Text File (*.txt)|*.txt"
         SaveADTDialog.ShowDialog()
     End Sub
-
-    Public Function Depthmap(Optional ByVal Path As String = "") As Bitmap
-        Dim dm(128, 128) As Single
-        Dim zh As Single = -99999
-        Dim zl As Single = 99999
-        Dim z As Single
-
-        For x As Integer = 0 To 15
-            For y As Integer = 0 To 15
-                For i As Integer = 0 To 7
-                    For j As Integer = 0 To 7
-                        z = _ADT.MCNKs(x, y).HeightMap8x8(i, j) + _ADT.MCNKs(x, y).Position.Z
-                        dm(x * 8 + i, y * 8 + j) = z
-                        zl = IIf(z < zl, z, zl)
-                        zh = IIf(z > zh, z, zh)
-                    Next
-                Next
-            Next
-        Next
-
-        Dim Depthm As New Bitmap(128, 128, PixelFormat.Format32bppArgb)
-        Dim f1 As Single
-        Dim f2 As Single = 255 / (zh - zl)
-
-        For x As Integer = 0 To 127
-            For y As Integer = 0 To 127
-                f1 = (dm(x, y) - zl) * f2
-                Depthm.SetPixel(x, y, Color.FromArgb(255, f1, f1, f1))
-            Next
-        Next
-
-        If Path > "" Then
-            'Dim ChunkID As String = "(" & x.ToString("00") & "," & y.ToString("00") & ")"
-            Depthm.Save(Path + "Depthmap.png", ImageFormat.Png)
-        End If
-
-        Return Depthm
-    End Function
-
-    Public Function Blend(ByVal x As Integer, ByVal y As Integer, Optional ByVal Path As String = "") As Bitmap
-
-        With _ADT.MCNKs(x, y)
-
-            Dim BLP As New FileReaders.BLP
-
-            Dim Layer0 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-            Dim Layer1 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-            Dim Layer2 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-            Dim Layer3 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-
-            Dim Alpha1 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-            Dim Alpha2 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-            Dim Alpha3 As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-
-            'First iteration (create pure layers)
-            Dim Tex0 As String = _ADT.TextureFiles(.Layer(0).TextureID)
-            Dim Tex1 As String = _ADT.TextureFiles(.Layer(1).TextureID)
-            Dim Tex2 As String = _ADT.TextureFiles(.Layer(2).TextureID)
-            Dim Tex3 As String = _ADT.TextureFiles(.Layer(3).TextureID)
-            Dim Do0 As Boolean = myMPQ.Locate(Tex0)
-            Dim Do1 As Boolean = myMPQ.Locate(Tex1) And Not .AlphaMaps(1) Is Nothing
-            Dim Do2 As Boolean = myMPQ.Locate(Tex2) And Not .AlphaMaps(2) Is Nothing
-            Dim Do3 As Boolean = myMPQ.Locate(Tex3) And Not .AlphaMaps(3) Is Nothing
-
-            Dim TexImg0 As Bitmap
-            Dim TexImg1 As Bitmap
-            Dim TexImg2 As Bitmap
-            Dim TexImg3 As Bitmap
-
-            If Do0 Then TexImg0 = BLP.LoadFromStream(myMPQ.LoadFile(Tex0), Tex0)
-            If Do1 Then TexImg1 = BLP.LoadFromStream(myMPQ.LoadFile(Tex1), Tex1)
-            If Do2 Then TexImg2 = BLP.LoadFromStream(myMPQ.LoadFile(Tex2), Tex2)
-            If Do3 Then TexImg3 = BLP.LoadFromStream(myMPQ.LoadFile(Tex3), Tex3)
-
-            Dim grl0 As Graphics = Graphics.FromImage(Layer0)
-            Dim grl1 As Graphics = Graphics.FromImage(Layer1)
-            Dim grl2 As Graphics = Graphics.FromImage(Layer2)
-            Dim grl3 As Graphics = Graphics.FromImage(Layer3)
-
-            Dim fr_rect As New Rectangle(0, 0, 256, 256)
-
-            For lx As Integer = 0 To 7
-                For ly As Integer = 0 To 7
-
-                    Dim to_rect As New Rectangle(lx * 256, ly * 256, 256, 256)
-                    If Do0 Then grl0.DrawImage(TexImg0, to_rect, fr_rect, GraphicsUnit.Pixel)
-                    If Do1 Then grl1.DrawImage(TexImg1, to_rect, fr_rect, GraphicsUnit.Pixel)
-                    If Do2 Then grl2.DrawImage(TexImg2, to_rect, fr_rect, GraphicsUnit.Pixel)
-                    If Do3 Then grl3.DrawImage(TexImg3, to_rect, fr_rect, GraphicsUnit.Pixel)
-                Next
-            Next
-
-            Dim gra1 As Graphics = Graphics.FromImage(Alpha1)
-            Dim gra2 As Graphics = Graphics.FromImage(Alpha2)
-            Dim gra3 As Graphics = Graphics.FromImage(Alpha3)
-
-            If Do1 Then
-                gra1.InterpolationMode = Drawing2D.InterpolationMode.HighQualityBicubic
-                gra1.DrawImage(.AlphaMaps(1), New Rectangle(0, 0, 2048, 2048), New Rectangle(0, 0, 64, 64), GraphicsUnit.Pixel)
-            End If
-
-            If Do2 Then
-                gra2.InterpolationMode = Drawing2D.InterpolationMode.HighQualityBicubic
-                gra2.DrawImage(.AlphaMaps(2), New Rectangle(0, 0, 2048, 2048), New Rectangle(0, 0, 64, 64), GraphicsUnit.Pixel)
-            End If
-
-            If Do3 Then
-                gra3.InterpolationMode = Drawing2D.InterpolationMode.HighQualityBicubic
-                gra3.DrawImage(.AlphaMaps(3), New Rectangle(0, 0, 2048, 2048), New Rectangle(0, 0, 64, 64), GraphicsUnit.Pixel)
-            End If
-
-            If Do0 And Path > "" Then Layer0.Save(Path & "_layer0.png", ImageFormat.Png)
-            If Do1 And Path > "" Then Layer1.Save(Path & "_layer1.png", ImageFormat.Png)
-            If Do1 And Path > "" Then Alpha1.Save(Path & "_alpha1.png", ImageFormat.Png)
-            If Do2 And Path > "" Then Layer2.Save(Path & "_layer2.png", ImageFormat.Png)
-            If Do2 And Path > "" Then Alpha2.Save(Path & "_alpha2.png", ImageFormat.Png)
-            If Do3 And Path > "" Then Layer3.Save(Path & "_layer3.png", ImageFormat.Png)
-            If Do3 And Path > "" Then Alpha3.Save(Path & "_alpha3.png", ImageFormat.Png)
-
-            'now combine the layers into ONE texture
-
-            Dim Combined As New Bitmap(2048, 2048, PixelFormat.Format32bppArgb)
-
-            Dim c0 As Integer
-            Dim c0r As Integer
-            Dim c0g As Integer
-            Dim c0b As Integer
-            Dim c1 As Integer
-            Dim c1r As Integer
-            Dim c1g As Integer
-            Dim c1b As Integer
-
-            Dim al As Single
-
-            Dim stco As Integer
-            Dim scco As IntPtr
-
-            Dim stl0 As Integer
-            Dim scl0 As IntPtr
-            Dim stl1 As Integer
-            Dim scl1 As IntPtr
-            Dim stl2 As Integer
-            Dim scl2 As IntPtr
-            Dim stl3 As Integer
-            Dim scl3 As IntPtr
-
-            Dim sta1 As Integer
-            Dim sca1 As IntPtr
-            Dim sta2 As Integer
-            Dim sca2 As IntPtr
-            Dim sta3 As Integer
-            Dim sca3 As IntPtr
-
-            Dim CombinedData As BitmapData
-
-            Dim Layer0Data As BitmapData
-            Dim Layer1Data As BitmapData
-            Dim Layer2Data As BitmapData
-            Dim Layer3Data As BitmapData
-
-            Dim Alpha1Data As BitmapData
-            Dim Alpha2Data As BitmapData
-            Dim Alpha3Data As BitmapData
-
-            Dim Rect As New Rectangle(0, 0, 2048, 2048)
-
-            CombinedData = Combined.LockBits(Rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb)
-            stco = CombinedData.Stride
-            scco = CombinedData.Scan0
-
-            If Do0 Then
-                Layer0Data = Layer0.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                stl0 = Layer0Data.Stride
-                scl0 = Layer0Data.Scan0
-            End If
-            If Do1 Then
-                Layer1Data = Layer1.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                stl1 = Layer1Data.Stride
-                scl1 = Layer1Data.Scan0
-                Alpha1Data = Alpha1.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                sta1 = Alpha1Data.Stride
-                sca1 = Alpha1Data.Scan0
-            End If
-            If Do2 Then
-                Layer2Data = Layer2.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                stl2 = Layer2Data.Stride
-                scl2 = Layer2Data.Scan0
-                Alpha2Data = Alpha2.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                sta2 = Alpha2Data.Stride
-                sca2 = Alpha2Data.Scan0
-            End If
-            If Do3 Then
-                Layer3Data = Layer3.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                stl3 = Layer3Data.Stride
-                scl3 = Layer3Data.Scan0
-                Alpha3Data = Alpha3.LockBits(Rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
-                sta3 = Alpha3Data.Stride
-                sca3 = Alpha3Data.Scan0
-            End If
-
-            For lx As Integer = 0 To 2047
-                For ly As Integer = 0 To 2047
-                    c0 = Marshal.ReadInt32(scl0, stl0 * ly + 4 * lx)
-                    c0r = c0 >> 16 And 255
-                    c0g = c0 >> 8 And 255
-                    c0b = c0 And 255
-
-                    'color = ((layer0 * (1- alpha1) + layer1 * alpha1) * (1 - alpha2) + layer2 * alpha2) * (1 - alpha3) + layer3 * alpha3
-
-                    If Do1 Then
-                        c1 = Marshal.ReadInt32(scl1, stl1 * ly + 4 * lx)
-                        al = Marshal.ReadByte(sca1, sta1 * ly + 4 * lx + 3) / 255
-
-                        c1r = c1 >> 16 And 255
-                        c1g = c1 >> 8 And 255
-                        c1b = c1 And 255
-
-                        c0r = c0r * (1 - al) + c1r * al
-                        c0g = c0g * (1 - al) + c1g * al
-                        c0b = c0b * (1 - al) + c1b * al
-
-                    End If
-
-                    If Do2 Then
-                        c1 = Marshal.ReadInt32(scl2, stl2 * ly + 4 * lx)
-                        al = Marshal.ReadByte(sca2, sta2 * ly + 4 * lx + 3) / 255
-
-                        c1r = c1 >> 16 And 255
-                        c1g = c1 >> 8 And 255
-                        c1b = c1 And 255
-
-                        c0r = c0r * (1 - al) + c1r * al
-                        c0g = c0g * (1 - al) + c1g * al
-                        c0b = c0b * (1 - al) + c1b * al
-
-                    End If
-
-                    If Do3 Then
-                        c1 = Marshal.ReadInt32(scl3, stl3 * ly + 4 * lx)
-                        al = Marshal.ReadByte(sca3, sta3 * ly + 4 * lx + 3) / 255
-
-                        c1r = c1 >> 16 And 255
-                        c1g = c1 >> 8 And 255
-                        c1b = c1 And 255
-
-                        c0r = c0r * (1 - al) + c1r * al
-                        c0g = c0g * (1 - al) + c1g * al
-                        c0b = c0b * (1 - al) + c1b * al
-
-                    End If
-
-                    c0 = &HFF000000 + (c0r << 16) + (c0g << 8) + c0b
-
-                    Marshal.WriteInt32(scco, stco * ly + 4 * lx, c0)
-                Next
-            Next
-
-            Combined.UnlockBits(CombinedData)
-            If Do0 Then
-                Layer0.UnlockBits(Layer0Data)
-            End If
-            If Do1 Then
-                Layer1.UnlockBits(Layer1Data)
-                Alpha1.UnlockBits(Alpha1Data)
-            End If
-            If Do2 Then
-                Layer2.UnlockBits(Layer2Data)
-                Alpha2.UnlockBits(Alpha2Data)
-            End If
-            If Do3 Then
-                Layer3.UnlockBits(Layer3Data)
-                Alpha3.UnlockBits(Alpha3Data)
-            End If
-
-            Return Combined
-        End With
-    End Function
 
 End Class

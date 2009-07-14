@@ -2,7 +2,7 @@
 
 Namespace FileReaders
 
-    Class SKIN
+    Public Class SKIN
 
         Public Structure sBoneIndices
             Public BoneIndex1 As Byte
@@ -133,7 +133,7 @@ Namespace FileReaders
 
     End Class
 
-    Class ANIM
+    Public Class ANIM
 
         Public Function Load()
             Return True
@@ -141,7 +141,7 @@ Namespace FileReaders
 
     End Class
 
-    Class M2
+    Public Class M2
 
         ''' <summary>
         ''' Structure to hold Triangle information (three indices of vertices)

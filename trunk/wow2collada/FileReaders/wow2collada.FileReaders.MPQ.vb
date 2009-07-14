@@ -8,7 +8,7 @@ Namespace FileReaders
     ''' Class to deal with MPQ archives (encapsulates MpqTool, (C) 2006 Weichhold (oliver@weichhold.com))
     ''' </summary>
     ''' <remarks></remarks>
-    Class MPQ
+    Public Class MPQ
 
         ' All C# MPQ Functions are
         ' - (C) 2006 Weichhold (oliver@weichhold.com)
@@ -21,8 +21,8 @@ Namespace FileReaders
             Dim Size As Integer
         End Structure
 
-        Private _KnownMPQ As New List(Of String) 'list of mpq's relative to the DATA directory 
-        Private _BasePath As String
+        Private _KnownMPQ As New List(Of String) 'list of mpq's with absolute path
+        Private _DataPaths As New List(Of String) 'list of directories to look in
         Public FileList As New System.Collections.Generic.Dictionary(Of String, FileListEntry)
         Public FileTree As New wow2collada.FileReaders.Node(Nothing, "ROOT")
 
@@ -37,30 +37,30 @@ Namespace FileReaders
             Dim p1 As String = regKey1.GetValue("InstallPath")
             Dim p2 As String = regKey2.GetValue("InstallPath")
             If p2 > "" Then
-                _BasePath = p2 & "data\"
+                _DataPaths.Add(p2 & "data\")
             Else
-                _BasePath = p1 & "data\"
+                _DataPaths.Add(p1 & "data\")
             End If
-            ' manual override for my computer because I have several WOW installations with different patchlevels
-            If System.Environment.MachineName.ToLower = "remo-d2" Then _BasePath = "d:\temp\data\"
 
-            ' I don't want to iterate through the directory reading arbitrary MPQs... (for now)
-            _KnownMPQ.Add("common.mpq")
-            _KnownMPQ.Add("patch.mpq")
-            _KnownMPQ.Add("patch-2.mpq")
-            _KnownMPQ.Add("expansion.mpq")
-            _KnownMPQ.Add("lichking.mpq")
-            _KnownMPQ.Add("deDE\base-deDE.mpq")
-            _KnownMPQ.Add("deDE\expansion-locale-deDE.mpq")
-            _KnownMPQ.Add("deDE\expansion-speech-deDE.mpq")
-            _KnownMPQ.Add("deDE\lichking-locale-deDE.mpq")
-            _KnownMPQ.Add("deDE\lichking-speech-deDE.mpq")
-            _KnownMPQ.Add("deDE\locale-deDE.mpq")
-            _KnownMPQ.Add("deDE\patch-deDE.mpq")
-            _KnownMPQ.Add("deDE\patch-deDE-2.mpq")
-            _KnownMPQ.Add("deDE\speech-deDE.mpq")
-            '_KnownMPQ.Add("common-2.mpq")
-            '_KnownMPQ.Add("deDE\backup-deDE.mpq")
+            ' manual override for my computer because I have several WOW installations with different patchlevels
+            If System.Environment.MachineName.ToLower = "remo-d2" Then
+                _DataPaths.Clear()
+                _DataPaths.Add("d:\temp\data\")
+            End If
+
+            ' Get all subdirectories as well
+            Dim SubDirs As String() = Directory.GetDirectories(_DataPaths(0))
+            For Each Dir As String In SubDirs
+                _DataPaths.Add(Dir)
+            Next
+
+            ' Get all MPQs from all directories
+            For Each Dir As String In _DataPaths
+                Dim Files As String() = Directory.GetFiles(Dir, "*.mpq")
+                For Each File As String In Files
+                    _KnownMPQ.Add(File)
+                Next
+            Next
 
         End Sub
 
@@ -76,7 +76,7 @@ Namespace FileReaders
             subTick = 99 / _KnownMPQ.Count
 
             For i As Integer = 0 To _KnownMPQ.Count - 1
-                Dim archiveFile As String = _BasePath & _KnownMPQ.ElementAt(i)
+                Dim archiveFile As String = _KnownMPQ.ElementAt(i)
 
                 If File.Exists(archiveFile) Then
 

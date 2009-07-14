@@ -6,7 +6,7 @@ Imports MpqReader
 
 Namespace FileReaders
 
-    Class BLP
+    Public Class BLP
 
         Public Function Load(ByVal FileName As String) As Bitmap
             Return LoadFromStream(File.OpenRead(FileName), FileName)

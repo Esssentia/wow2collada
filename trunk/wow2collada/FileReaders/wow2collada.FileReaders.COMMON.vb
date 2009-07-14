@@ -4,7 +4,7 @@
     ''' Class to manage and manipulate a tree of nodes (very simplistic)
     ''' </summary>
     ''' <remarks></remarks>
-    Class Node
+    Public Class Node
         Dim _Data As String
         Dim _Nodes As Dictionary(Of String, Node)
         Dim _Parent As Node
