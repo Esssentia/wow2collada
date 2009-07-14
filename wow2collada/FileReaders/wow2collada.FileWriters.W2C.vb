@@ -4,7 +4,7 @@ Imports System.IO
 
 Namespace FileWriters
 
-    Class W2C
+    Public Class W2C
 
         Public Function Save(ByVal Filename As String, ByRef Models As List(Of sModel)) As Boolean
             'Save everything as W2C (wow2collada intermediate format for blender import)
@@ -51,7 +51,7 @@ Namespace FileWriters
                     End With
                 Next
             Next
-            
+
             'submeshes:
             For h As Integer = 0 To Models.Count - 1
                 With Models(h)

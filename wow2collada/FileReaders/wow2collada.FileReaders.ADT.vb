@@ -7,7 +7,7 @@ Imports wow2collada.HelperFunctions
 
 Namespace FileReaders
 
-    Class ADT
+    Public Class ADT
 
         Public Structure sLayer
             Public TextureID As UInt32
@@ -66,6 +66,7 @@ Namespace FileReaders
             Dim AlphaMaps As Bitmap()
             Dim HeightMap9x9 As Single(,)
             Dim HeightMap8x8 As Single(,)
+            Dim preWotLK As Boolean
         End Structure
 
         Public TextureFiles As String()
@@ -74,6 +75,7 @@ Namespace FileReaders
         Public M2Placements As sM2Placement()
         Public WMOPlacements As sWMOPlacement()
         Public MCNKs As sMCNK(,)
+        Public Version As UInt32
 
         Public Sub Load(ByVal File As Byte())
             Load(New MemoryStream(File))
@@ -89,7 +91,6 @@ Namespace FileReaders
             Dim ChunkId As String
             Dim ChunkLen As UInt32
             Dim FilePosition As UInt32 = 0
-            Dim Version As UInt32
             ReDim MCNKs(15, 15)
             Dim Done As Boolean = False
 
@@ -141,7 +142,7 @@ Namespace FileReaders
 
                     Case "MCNK"
                         LoadMCNK(br)
-                       
+
 
                     Case "MH2O" 'Water and such...
                         ' do it :)
@@ -248,42 +249,51 @@ Namespace FileReaders
                 SubChunkId = myHF.StrRev(SubChunkId)
                 SubChunkLen = br.ReadUInt32
                 If SubChunkId <> "MCAL" Then Debug.Print("Argh...: Expected MCAL subchunk, got: " & SubChunkId)
-                If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCAL subchunk of length multiple 16, got: " & SubChunkLen)
+                'If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCAL subchunk of length multiple 16, got: " & SubChunkLen)
                 ReDim .AlphaMaps(3)
 
+                .preWotLK = (SubChunkLen Mod 2048 = 0) And SubChunkLen > 0
+
                 For i As Integer = 0 To 3
-                    If .Layer(i).TextureID > 0 Then
-                        If .Layer(i).Flags And &H100 Then 'use alpha map
+                    'If .Layer(i).TextureID > 0 Then
+                    If .Layer(i).Flags And &H100 Then 'use alpha map
+                        If .Layer(i).Flags And &H200 Then 'compressed alpha
                             Dim Buffer(4095) As Byte
-                            If .Layer(i).Flags And &H200 Then 'compressed alpha
-                                Dim offO As Integer = 0
-                                While offO < 4096
-                                    Dim b1 As Byte = br.ReadByte
-                                    Dim b2 As Byte = br.ReadByte
-                                    Dim count As Integer = b1 And &H7F
-                                    Dim fill As Boolean = (b1 > 127)
+                            Dim offO As Integer = 0
+                            While offO < 4096
+                                Dim b1 As Byte = br.ReadByte
+                                Dim b2 As Byte = br.ReadByte
+                                Dim count As Integer = b1 And &H7F
+                                Dim fill As Boolean = b1 And &H80
 
-                                    For k As Integer = 0 To count - 1
-                                        If offO < 4096 Then
-                                            Buffer(offO) = b2
-                                            offO += 1
-                                        Else
-                                            Debug.Print(String.Format("Compressed Alpha Weirdness: Bufferpos {0} / Bufferval {1}", offO, b2))
-                                            k = count
-                                        End If
-                                        If Not fill Then b2 = br.ReadByte
-                                    Next
+                                'Debug.Print(br.BaseStream.Position.ToString("0000000") & " " & offO.ToString("0000") & " " & count.ToString("000") & " " & fill)
 
-                                End While
-                                .AlphaMaps(i) = BytesToAlphaBitmapCompressed(Buffer)
-                            Else 'uncompressed alpha
+                                For k As Integer = 0 To count - 1
+                                    If offO < 4096 Then
+                                        Buffer(offO) = b2
+                                        offO += 1
+                                    Else
+                                        Debug.Print(String.Format("Compressed Alpha Weirdness: Bufferpos {0} / Bufferval {1}", offO, b2))
+                                        k = count
+                                    End If
+                                    If Not fill And k < (count - 1) Then b2 = br.ReadByte
+                                Next
+
+                            End While
+                            .AlphaMaps(i) = BytesToAlphaBitmap4096(Buffer)
+                        Else 'uncompressed alpha
+                            If .preWotLK Then
+                                Dim Buffer(2047) As Byte
                                 Buffer = br.ReadBytes(2048)
-                                .AlphaMaps(i) = BytesToAlphaBitmapUncompressed(Buffer)
+                                .AlphaMaps(i) = BytesToAlphaBitmap2048(Buffer)
+                            Else
+                                Dim Buffer(4095) As Byte
+                                Buffer = br.ReadBytes(4096)
+                                .AlphaMaps(i) = BytesToAlphaBitmap4096(Buffer)
                             End If
-
-
                         End If
                     End If
+                    'End If
                 Next
 
             End With
@@ -349,28 +359,31 @@ Namespace FileReaders
             Return Out
         End Function
 
-        Private Function BytesToAlphaBitmapUncompressed(ByVal buffer As Byte())
+        Private Function BytesToAlphaBitmap2048(ByVal buffer As Byte())
             Dim Out As New Bitmap(64, 64, Imaging.PixelFormat.Format32bppArgb)
+            Dim B1 As Byte
+            Dim B2 As Byte
 
             For y As Integer = 0 To 63
                 For x As Integer = 0 To 31
-                    Dim b As Byte = buffer(x + y * 32)
-                    Out.SetPixel(x * 2 + 1, y, Color.FromArgb(b And &HF0, 0, 0, 0))
-                    Out.SetPixel(x * 2, y, Color.FromArgb(b << 4 And &HF0, 0, 0, 0))
-                    'Debug.Print((b And &HF0) & " " & (b << 4 And &HF0))
+                    B1 = buffer(x + y * 32) And &HF0
+                    B2 = buffer(x + y * 32) << 4 And &HF0
+                    Out.SetPixel(x * 2 + 1, y, Color.FromArgb(B1, B1, B1, B1))
+                    Out.SetPixel(x * 2, y, Color.FromArgb(B2, B2, B2, B2))
                 Next
             Next
 
             Return Out
         End Function
 
-        Private Function BytesToAlphaBitmapCompressed(ByVal buffer As Byte())
+        Private Function BytesToAlphaBitmap4096(ByVal buffer As Byte())
             Dim Out As New Bitmap(64, 64, Imaging.PixelFormat.Format32bppArgb)
+            Dim B As Byte
 
             For y As Integer = 0 To 63
                 For x As Integer = 0 To 63
-                    Dim b As Byte = buffer(x + y * 64)
-                    Out.SetPixel(x, y, Color.FromArgb(b, 0, 0, 0))
+                    B = buffer(x + y * 64)
+                    Out.SetPixel(x, y, Color.FromArgb(B, B, B, B))
                 Next
             Next
 

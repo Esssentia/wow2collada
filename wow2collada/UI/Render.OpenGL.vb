@@ -28,6 +28,15 @@ Public Class RenderFormOpenGL
     Private LastTimeStamp As Integer
     Private FrameCounter As Integer
 
+    'splatting stuff
+    Private LayerID As Integer() = {0, 0, 0, 0, 0, 0, 0}
+    Private LayerNames As String() = {"Layer0", "Layer1", "Layer2", "Layer3", "Alpha1", "Alpha2", "Alpha3"}
+    Private NullTexture As Integer
+
+    Private FragmentShaderID As Integer
+    Private ShaderProgramID As Integer
+
+
     Private Sub OpenGLControl_KeyDown(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyEventArgs) Handles OpenGLControl.KeyDown
         Dim Mult As Integer = 1
         Dim AngleStep As Single = 5
@@ -121,11 +130,11 @@ Public Class RenderFormOpenGL
     End Sub
 
     Public Sub RenderFrame()
+        Dim ID As String
+
         Gl.glClear(Gl.GL_COLOR_BUFFER_BIT Or Gl.GL_DEPTH_BUFFER_BIT)
         Gl.glLoadIdentity()
         Gl.glTranslatef(0.0F, 0.0F, -20.0F)
-        'Gl.glCullFace(Gl.GL_BACK)
-        'Gl.glEnable(Gl.GL_CULL_FACE)
 
         'Rotate
         Static Dim LastTicks As Integer = Environment.TickCount
@@ -170,97 +179,170 @@ Public Class RenderFormOpenGL
                     With Models(h).Meshes(i)
                         If SubSets.Nodes(h).Checked And SubSets.Nodes(h).Nodes(i).Checked Then
 
-                            For j As Integer = 0 To 3
-                                If .TextureList.Count > j Then
-                                    If Not .TextureList.ElementAt(j) Is Nothing Then
-                                        Dim Tex As sTextureEntry = .TextureList.ElementAt(j)
+                            Gl.glEnable(Gl.GL_TEXTURE_2D)
+                            If .isADT Then
+                                Gl.glUseProgram(ShaderProgramID)
 
-                                        If j > 0 And Tex.AlphaMapID <> "" Then
-                                            Gl.glEnable(Gl.GL_BLEND)
-                                            'Gl.glColor4f(0.0F, 0.0F, 0.0F, 0.0F)
-                                            
-                                            'alphamap first
-                                            Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.AlphaMapID).OpenGLTexID)
-                                            Gl.glCallList(.OpenGLMeshID)
+                                Gl.glActiveTexture(Gl.GL_TEXTURE0)
+                                ID = .GetTextureIDByName("Layer0")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Layer0")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
 
-                                            'texture afterwards
-                                            Gl.glBlendFunc(Gl.GL_DST_ALPHA, Gl.GL_DST_COLOR) '  Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                            Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
-                                            'Gl.glCallList(.OpenGLMeshID)
+                                Gl.glActiveTexture(Gl.GL_TEXTURE1)
+                                ID = .GetTextureIDByName("Layer1")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Layer1")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
 
-                                        Else
-                                            Select Case Tex.Blending1
-                                                Case 0 'opaque
-                                                    If Tex.Blending2 Then
+                                Gl.glActiveTexture(Gl.GL_TEXTURE2)
+                                ID = .GetTextureIDByName("Layer2")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Layer2")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
+
+                                Gl.glActiveTexture(Gl.GL_TEXTURE3)
+                                ID = .GetTextureIDByName("Layer3")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Layer3")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
+
+                                Gl.glActiveTexture(Gl.GL_TEXTURE4)
+                                ID = .GetTextureIDByName("Alpha1")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(ID).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
+
+                                Gl.glActiveTexture(Gl.GL_TEXTURE5)
+                                ID = .GetTextureIDByName("Alpha2")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Alpha2")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
+
+                                Gl.glActiveTexture(Gl.GL_TEXTURE6)
+                                ID = .GetTextureIDByName("Alpha3")
+                                If Models(h).Textures.ContainsKey(ID) Then
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(.GetTextureIDByName("Alpha3")).OpenGLTexID)
+                                Else
+                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+                                End If
+
+                                'Gl.glPolygonMode(Gl.GL_FRONT_AND_BACK, Gl.GL_FILL)
+                                Gl.glCallList(.OpenGLMeshID)
+
+                            Else
+                                Gl.glUseProgram(0)
+                                For j As Integer = 0 To 3
+                                    If .TextureList.Count > j Then
+                                        If Not .TextureList.ElementAt(j) Is Nothing Then
+                                            Dim Tex As sTextureEntry = .TextureList.ElementAt(j)
+
+                                            If j > 0 And Tex.AlphaMapID <> "" Then
+                                                Gl.glEnable(Gl.GL_BLEND)
+                                                'Gl.glColor4f(0.0F, 0.0F, 0.0F, 0.0F)
+
+                                                'alphamap first
+                                                Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.AlphaMapID).OpenGLTexID)
+                                                Gl.glCallList(.OpenGLMeshID)
+
+                                                'texture afterwards
+                                                Gl.glBlendFunc(Gl.GL_DST_ALPHA, Gl.GL_DST_COLOR) '  Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
+                                                'Gl.glCallList(.OpenGLMeshID)
+
+                                            Else
+                                                Select Case Tex.Blending1
+                                                    Case 0 'opaque
+                                                        If Tex.Blending2 Then
+                                                            Gl.glEnable(Gl.GL_BLEND)
+                                                            Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                            Gl.glEnable(Gl.GL_ALPHA_TEST)
+                                                            Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
+                                                        Else
+                                                            Gl.glDisable(Gl.GL_BLEND)
+                                                            Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                        End If
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                    Case 1 'BM_TRANSPARENT
+                                                        Gl.glEnable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glAlphaFunc(Gl.GL_GEQUAL, 0.7F)
+                                                        Gl.glDisable(Gl.GL_BLEND)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                    Case 2 'BM_ALPHA_BLEND
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
                                                         Gl.glEnable(Gl.GL_BLEND)
                                                         Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                                        Gl.glEnable(Gl.GL_ALPHA_TEST)
-                                                        Gl.glAlphaFunc(Gl.GL_GREATER, 0.7F)
-                                                    Else
-                                                        Gl.glDisable(Gl.GL_BLEND)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+
+                                                    Case 3 'BM_ADDITIVE
                                                         Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    End If
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_SRC_COLOR, Gl.GL_ONE)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
-                                                Case 1 'BM_TRANSPARENT
-                                                    Gl.glEnable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glAlphaFunc(Gl.GL_GEQUAL, 0.7F)
-                                                    Gl.glDisable(Gl.GL_BLEND)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                    Case 4 'BM_ADDITIVE_ALPHA
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
-                                                Case 2 'BM_ALPHA_BLEND
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                    Case 5 'BM_MODULATE
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
-                                                Case 3 'BM_ADDITIVE
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_SRC_COLOR, Gl.GL_ONE)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                    Case 6 'BM_MODULATEX2 (not sure if this is right)
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
-                                                Case 4 'BM_ADDITIVE_ALPHA
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                    Case Else
+                                                        Gl.glDisable(Gl.GL_ALPHA_TEST)
+                                                        Gl.glEnable(Gl.GL_BLEND)
+                                                        Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
+                                                        Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
 
-                                                Case 5 'BM_MODULATE
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
+                                                End Select
+                                                Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
+                                                If Models(h).Textures.ContainsKey(Tex.TextureID) Then
+                                                    Gl.glActiveTexture(Gl.GL_TEXTURE0)
+                                                    Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
+                                                End If
 
-                                                Case 6 'BM_MODULATEX2 (not sure if this is right)
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_DST_COLOR, Gl.GL_SRC_COLOR)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                                Case Else
-                                                    Gl.glDisable(Gl.GL_ALPHA_TEST)
-                                                    Gl.glEnable(Gl.GL_BLEND)
-                                                    Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA)
-                                                    Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_COMBINE)
-
-                                            End Select
-                                            'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
-                                            If Models(h).Textures.ContainsKey(Tex.TextureID) Then Gl.glBindTexture(Gl.GL_TEXTURE_2D, Models(h).Textures(Tex.TextureID).OpenGLTexID)
-                                            Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
-                                            Gl.glCallList(.OpenGLMeshID)
+                                                Gl.glColor4f(1.0F, 1.0F, 1.0F, 1.0F)
+                                                Gl.glCallList(.OpenGLMeshID)
+                                            End If
                                         End If
                                     End If
-                                End If
-                            Next
-                        End If
+                                Next
+
+                            End If
+
+
+                            End If
                     End With
                 Next
             Next
 
         End If
-            
+
 
         Gl.glFlush()
         OpenGLControl.Invalidate()
@@ -415,11 +497,9 @@ Public Class RenderFormOpenGL
                             Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, Tex.TextureMap.Width, Tex.TextureMap.Height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0)
                             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR)
                             Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR)
-                            'Gl.glTexEnvi(Gl.GL_TEXTURE_ENV, Gl.GL_TEXTURE_ENV_MODE, Gl.GL_REPLACE)
                             Tex.TextureMap.UnlockBits(bitmapdata)
                             Tex.OpenGLTexID = TexiID
                             Models(h).SetOpenGLTextureID(TexsID, TexiID)
-                            'Debug.Print(String.Format("Added Texture: {0} -> {1}", TexiID, TexsID))
                         Else
                             Debug.Print(String.Format("Problem with Texture: {0}", TexsID))
                         End If
@@ -429,10 +509,55 @@ Public Class RenderFormOpenGL
         End If
     End Sub
 
+    Sub CreateShader()
+        FragmentShaderID = Gl.glCreateShader(Gl.GL_FRAGMENT_SHADER)
+
+        Dim FragShad As String = FragmentShaderWotLK()
+        Gl.glShaderSource(FragmentShaderID, 1, New String() {FragShad}, FragShad.Length - 1)
+        Gl.glCompileShader(FragmentShaderID)
+
+        Dim status As Integer
+        Gl.glGetShaderiv(FragmentShaderID, Gl.GL_COMPILE_STATUS, status)
+        If Not status Then
+            Dim s As New System.Text.StringBuilder(10000)
+            Gl.glGetShaderInfoLog(FragmentShaderID, 10000, vbNull, s)
+            'Debug.Print(FragShad)
+            MsgBox(s.ToString)
+        End If
+
+        ShaderProgramID = Gl.glCreateProgram()
+        Gl.glAttachShader(ShaderProgramID, FragmentShaderID)
+        Gl.glLinkProgram(ShaderProgramID)
+        Gl.glUseProgram(ShaderProgramID)
+        For i As Integer = 0 To 6
+            Dim loc As Integer = Gl.glGetUniformLocation(ShaderProgramID, LayerNames(i))
+            Gl.glUniform1i(loc, i)
+        Next
+    End Sub
+
+    Sub CreateNullTexture()
+        Dim img As New Bitmap(1, 1, Imaging.PixelFormat.Format32bppArgb)
+        Dim bitmapdata As Imaging.BitmapData
+        Dim rect As Rectangle = New Rectangle(0, 0, 1, 1)
+
+        img.SetPixel(0, 0, Color.FromArgb(0, 0, 0, 0))
+
+        bitmapdata = img.LockBits(rect, Imaging.ImageLockMode.ReadOnly, Imaging.PixelFormat.Format32bppArgb)
+        Gl.glGenTextures(1, NullTexture)
+        Gl.glBindTexture(Gl.GL_TEXTURE_2D, NullTexture)
+        Gl.glTexImage2D(Gl.GL_TEXTURE_2D, 0, Gl.GL_RGBA, img.Width, img.Height, 0, Gl.GL_BGRA, Gl.GL_UNSIGNED_BYTE, bitmapdata.Scan0)
+        Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MIN_FILTER, Gl.GL_LINEAR)
+        Gl.glTexParameteri(Gl.GL_TEXTURE_2D, Gl.GL_TEXTURE_MAG_FILTER, Gl.GL_LINEAR)
+        img.UnlockBits(bitmapdata)
+        img.Dispose()
+    End Sub
+
     Sub SetupScene()
         SubSets.Nodes.Clear()
 
         If Models.Count > 0 Then
+            CreateNullTexture()
+            CreateShader()
             CreateTextureList()
             CreateVertexBuffer()
 
@@ -514,6 +639,84 @@ Public Class RenderFormOpenGL
         BonesToolStripMenuItem.Checked = Not BonesToolStripMenuItem.Checked
         DrawBones = BonesToolStripMenuItem.Checked
     End Sub
+
+    ''' <summary>
+    ''' Return a GLSL fragment shader that will blend according to the blending rules in WotLK
+    ''' </summary>
+    ''' <returns>A string containing the shader</returns>
+    ''' <remarks></remarks>
+    Private Function FragmentShaderWotLK() As String
+        Dim Out As New List(Of String)
+        Dim Txt As String = ""
+
+        Out.Add("uniform sampler2D Layer0;")
+        Out.Add("uniform sampler2D Layer1;")
+        Out.Add("uniform sampler2D Layer2;")
+        Out.Add("uniform sampler2D Layer3;")
+        Out.Add("uniform sampler2D Alpha1;")
+        Out.Add("uniform sampler2D Alpha2;")
+        Out.Add("uniform sampler2D Alpha3;")
+        Out.Add("varying vec4 texCoord;")
+        Out.Add("void main (void)")
+        Out.Add("{")
+        Out.Add("   vec4 l0 = texture2D( Layer0, texCoord.xy * 8);")
+        Out.Add("   vec4 l1 = texture2D( Layer1, texCoord.xy * 8);")
+        Out.Add("   vec4 l2 = texture2D( Layer2, texCoord.xy * 8);")
+        Out.Add("   vec4 l3 = texture2D( Layer3, texCoord.xy * 8);")
+        Out.Add("   vec4 a1 = texture2D( Alpha1, texCoord.xy);")
+        Out.Add("   vec4 a2 = texture2D( Alpha2, texCoord.xy);")
+        Out.Add("   vec4 a3 = texture2D( Alpha3, texCoord.xy);")
+        Out.Add("   gl_FragColor = l0 * (1 - a1.a - a2.a - a3.a) + l1 * a1.a + l2 * a2.a + l3 * a3.a;")
+        Out.Add("}")
+
+        For Each s As String In Out
+            Txt &= s & vbCr
+        Next
+
+        Txt &= Chr(0)
+
+        Return Txt
+
+    End Function
+
+    ''' <summary>
+    ''' Return a GLSL shader that will blend according to the blending rules before WotLK
+    ''' </summary>
+    ''' <returns>A string containing the shader</returns>
+    ''' <remarks></remarks>
+    Private Function FragmentShaderClassic() As String
+        Dim Out As New List(Of String)
+        Dim Txt As String = ""
+
+        Out.Add("uniform sampler2D Layer0;")
+        Out.Add("uniform sampler2D Layer1;")
+        Out.Add("uniform sampler2D Layer2;")
+        Out.Add("uniform sampler2D Layer3;")
+        Out.Add("uniform sampler2D Alpha1;")
+        Out.Add("uniform sampler2D Alpha2;")
+        Out.Add("uniform sampler2D Alpha3;")
+        Out.Add("varying vec4 texCoord;")
+        Out.Add("void main (void)")
+        Out.Add("{")
+        Out.Add("   vec4 l0 = texture2D( Layer0, texCoord.xy * 8);")
+        Out.Add("   vec4 l1 = texture2D( Layer1, texCoord.xy * 8);")
+        Out.Add("   vec4 l2 = texture2D( Layer2, texCoord.xy * 8);")
+        Out.Add("   vec4 l3 = texture2D( Layer3, texCoord.xy * 8);")
+        Out.Add("   vec4 a1 = texture2D( Alpha1, texCoord.xy);")
+        Out.Add("   vec4 a2 = texture2D( Alpha2, texCoord.xy);")
+        Out.Add("   vec4 a3 = texture2D( Alpha3, texCoord.xy);")
+        Out.Add("   gl_FragColor = ((l0 * (1 - a1.a) + l1 * a1.a) * (1 - a2.a) + l2 * a2.a) * (1 - a3.a) + l3 * a3.a;")
+        Out.Add("}")
+
+        For Each s As String In Out
+            Txt &= s & vbCr
+        Next
+
+        Txt &= Chr(0)
+
+        Return Txt
+
+    End Function
 
 End Class
 

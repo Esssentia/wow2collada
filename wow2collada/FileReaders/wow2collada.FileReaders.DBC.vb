@@ -6,7 +6,7 @@ Imports MpqReader
 
 Namespace FileReaders
 
-    Class DBC
+    Public Class DBC
 
         Public Structure sCreatureModelData
             Dim ModelID As UInt32

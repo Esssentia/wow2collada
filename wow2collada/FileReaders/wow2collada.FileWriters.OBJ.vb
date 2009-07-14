@@ -4,7 +4,7 @@ Imports System.IO
 
 Namespace FileWriters
 
-    Class OBJ
+    Public Class OBJ
 
         Public Function Save(ByVal Filename As String, ByRef Models As List(Of sModel)) As Boolean
             'Save everything as OBJ...
@@ -40,9 +40,9 @@ Namespace FileWriters
             Lines.Add("# Exported from wow2collada")
             Lines.Add("")
 
-            For h As Integer = 0 To models.Count - 1
-                For i As Integer = 0 To models(h).Textures.Count - 1
-                    With models(h).Textures.ElementAt(i)
+            For h As Integer = 0 To Models.Count - 1
+                For i As Integer = 0 To Models(h).Textures.Count - 1
+                    With Models(h).Textures.ElementAt(i)
                         TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.Key)) & ".png"
                         If Not TextureList.ContainsKey(TEXFile) Then
                             .Value.TextureMap.Save(TEXFile)
@@ -58,7 +58,7 @@ Namespace FileWriters
                             Lines.Add(String.Format("map_Kd {0}", TEXFile))
                             Lines.Add("")
                         End If
-                        
+
                     End With
                 Next
 
