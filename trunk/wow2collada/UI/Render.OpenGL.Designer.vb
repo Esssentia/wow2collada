@@ -11,7 +11,6 @@ Partial Class RenderFormOpenGL
             End If
         Finally
             MyBase.Dispose(disposing)
-            OpenGLControl.DestroyContexts()
         End Try
     End Sub
 
@@ -31,13 +30,13 @@ Partial Class RenderFormOpenGL
         Me.DisplayToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.TexturedToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.WireframeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.BonesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.ResetViewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.RotateToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.DebugModeToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer
-        Me.OpenGLControl = New Tao.Platform.Windows.SimpleOpenGlControl
         Me.SubSets = New System.Windows.Forms.TreeView
-        Me.BonesToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
+        Me.GlControl1 = New OpenTK.GLControl
         Me.StatusStrip1.SuspendLayout()
         Me.MenuStrip1.SuspendLayout()
         Me.SplitContainer1.Panel1.SuspendLayout()
@@ -89,7 +88,7 @@ Partial Class RenderFormOpenGL
         '
         Me.DisplayToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TexturedToolStripMenuItem, Me.WireframeToolStripMenuItem, Me.BonesToolStripMenuItem})
         Me.DisplayToolStripMenuItem.Name = "DisplayToolStripMenuItem"
-        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DisplayToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.DisplayToolStripMenuItem.Text = "Display"
         '
         'TexturedToolStripMenuItem
@@ -97,19 +96,25 @@ Partial Class RenderFormOpenGL
         Me.TexturedToolStripMenuItem.Checked = True
         Me.TexturedToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
         Me.TexturedToolStripMenuItem.Name = "TexturedToolStripMenuItem"
-        Me.TexturedToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.TexturedToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.TexturedToolStripMenuItem.Text = "Textured"
         '
         'WireframeToolStripMenuItem
         '
         Me.WireframeToolStripMenuItem.Name = "WireframeToolStripMenuItem"
-        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.WireframeToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.WireframeToolStripMenuItem.Text = "Wireframe"
+        '
+        'BonesToolStripMenuItem
+        '
+        Me.BonesToolStripMenuItem.Name = "BonesToolStripMenuItem"
+        Me.BonesToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
+        Me.BonesToolStripMenuItem.Text = "Bones"
         '
         'ResetViewToolStripMenuItem
         '
         Me.ResetViewToolStripMenuItem.Name = "ResetViewToolStripMenuItem"
-        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.ResetViewToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.ResetViewToolStripMenuItem.Text = "Reset View"
         '
         'RotateToolStripMenuItem
@@ -117,13 +122,13 @@ Partial Class RenderFormOpenGL
         Me.RotateToolStripMenuItem.Checked = True
         Me.RotateToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked
         Me.RotateToolStripMenuItem.Name = "RotateToolStripMenuItem"
-        Me.RotateToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.RotateToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.RotateToolStripMenuItem.Text = "Rotate"
         '
         'DebugModeToolStripMenuItem
         '
         Me.DebugModeToolStripMenuItem.Name = "DebugModeToolStripMenuItem"
-        Me.DebugModeToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DebugModeToolStripMenuItem.Size = New System.Drawing.Size(130, 22)
         Me.DebugModeToolStripMenuItem.Text = "Debug"
         '
         'SplitContainer1
@@ -134,7 +139,7 @@ Partial Class RenderFormOpenGL
         '
         'SplitContainer1.Panel1
         '
-        Me.SplitContainer1.Panel1.Controls.Add(Me.OpenGLControl)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.GlControl1)
         '
         'SplitContainer1.Panel2
         '
@@ -143,23 +148,6 @@ Partial Class RenderFormOpenGL
         Me.SplitContainer1.Size = New System.Drawing.Size(955, 613)
         Me.SplitContainer1.SplitterDistance = 829
         Me.SplitContainer1.TabIndex = 7
-        '
-        'OpenGLControl
-        '
-        Me.OpenGLControl.AccumBits = CType(0, Byte)
-        Me.OpenGLControl.AutoCheckErrors = False
-        Me.OpenGLControl.AutoFinish = False
-        Me.OpenGLControl.AutoMakeCurrent = True
-        Me.OpenGLControl.AutoSwapBuffers = True
-        Me.OpenGLControl.BackColor = System.Drawing.Color.Black
-        Me.OpenGLControl.ColorBits = CType(32, Byte)
-        Me.OpenGLControl.DepthBits = CType(16, Byte)
-        Me.OpenGLControl.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.OpenGLControl.Location = New System.Drawing.Point(0, 0)
-        Me.OpenGLControl.Name = "OpenGLControl"
-        Me.OpenGLControl.Size = New System.Drawing.Size(829, 613)
-        Me.OpenGLControl.StencilBits = CType(0, Byte)
-        Me.OpenGLControl.TabIndex = 7
         '
         'SubSets
         '
@@ -170,11 +158,15 @@ Partial Class RenderFormOpenGL
         Me.SubSets.Size = New System.Drawing.Size(122, 613)
         Me.SubSets.TabIndex = 0
         '
-        'BonesToolStripMenuItem
+        'GlControl1
         '
-        Me.BonesToolStripMenuItem.Name = "BonesToolStripMenuItem"
-        Me.BonesToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
-        Me.BonesToolStripMenuItem.Text = "Bones"
+        Me.GlControl1.BackColor = System.Drawing.Color.Black
+        Me.GlControl1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.GlControl1.Location = New System.Drawing.Point(0, 0)
+        Me.GlControl1.Name = "GlControl1"
+        Me.GlControl1.Size = New System.Drawing.Size(829, 613)
+        Me.GlControl1.TabIndex = 0
+        Me.GlControl1.VSync = True
         '
         'RenderFormOpenGL
         '
@@ -212,7 +204,7 @@ Partial Class RenderFormOpenGL
     Friend WithEvents RotateToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents DebugModeToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents SplitContainer1 As System.Windows.Forms.SplitContainer
-    Friend WithEvents OpenGLControl As Tao.Platform.Windows.SimpleOpenGlControl
     Friend WithEvents SubSets As System.Windows.Forms.TreeView
     Friend WithEvents BonesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents GlControl1 As OpenTK.GLControl
 End Class

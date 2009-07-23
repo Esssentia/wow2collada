@@ -27,7 +27,7 @@ Public Class MainForm
             ListBox1.Items.Add(Retval(i))
         Next
         TrackBar1.Minimum = 0
-        TrackBar1.Maximum = Math.Max(0, Models(0).Textures.Count - 1)
+        TrackBar1.Maximum = Math.Max(0, TextureMgr.Textures.Count - 1)
         TrackBar1.Value = 0
         TrackBar1_ValueChanged(Me, New System.EventArgs)
         StatusLabel1.Text = CurrentFile
@@ -69,9 +69,10 @@ Public Class MainForm
     Private Sub TrackBar1_ValueChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles TrackBar1.ValueChanged
         Dim i As Integer = TrackBar1.Value
 
-        If i > -1 And i < Models(0).Textures.Count Then
-            TextureBox.Image = Models(0).Textures.ElementAt(i).Value.TextureMap
-            CurrentTexture = Models(0).Textures.ElementAt(i).Key
+        If i > -1 And i < TextureMgr.Textures.Count Then
+            TextureBox.Image = TextureMgr.Textures.ElementAt(i).Value.TextureMap
+            CurrentTexture = TextureMgr.Textures.ElementAt(i).Key
+            TextureBox.Refresh()
         End If
     End Sub
 
@@ -149,10 +150,10 @@ Public Class MainForm
         Select Case Extension
             Case ".obj"
                 Dim OBJ As New FileWriters.OBJ
-                OBJ.Save(Fullname, Models)
+                OBJ.Save(Fullname, ModelMgr)
             Case ".w2c"
                 Dim W2C As New FileWriters.W2C
-                W2C.Save(Fullname, Models)
+                W2C.Save(Fullname, ModelMgr)
             Case ".dae"
                 MsgBox("Collada Export not yet implemented.")
             Case Else
@@ -193,6 +194,11 @@ Public Class MainForm
     Private Sub ADTNorthend3233ToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ADTNorthend3233ToolStripMenuItem.Click
         CurrentFile = "world\maps\northrend\northrend_32_33.adt"
         LoadModelFromMPQ()
+    End Sub
+
+    Private Sub RegionLoaderToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles RegionLoaderToolStripMenuItem.Click
+        Dim reg As New OpenRegionOptions
+        reg.ShowDialog()
     End Sub
 
 End Class

@@ -6,7 +6,7 @@ Namespace FileWriters
 
     Public Class OBJ
 
-        Public Function Save(ByVal Filename As String, ByRef Models As List(Of sModel)) As Boolean
+        Public Function Save(ByVal Filename As String, ByRef ModelMgr As ModelManager) As Boolean
             'Save everything as OBJ...
             Dim OBJFile As String
             Dim MTLFile As String
@@ -40,28 +40,24 @@ Namespace FileWriters
             Lines.Add("# Exported from wow2collada")
             Lines.Add("")
 
-            For h As Integer = 0 To Models.Count - 1
-                For i As Integer = 0 To Models(h).Textures.Count - 1
-                    With Models(h).Textures.ElementAt(i)
-                        TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(.Key)) & ".png"
-                        If Not TextureList.ContainsKey(TEXFile) Then
-                            .Value.TextureMap.Save(TEXFile)
-                            TextureList.Add(TEXFile, 1)
+            For Each model In ModelMgr.Models
+                For Each texture In TextureMgr.Textures
+                    TEXFile = BasePath & "\" & myHF.StringToPureAscii(myHF.GetBaseName(texture.Key)) & ".png"
+                    If Not TextureList.ContainsKey(TEXFile) Then
+                        texture.Value.TextureMap.Save(TEXFile)
+                        TextureList.Add(TEXFile, 1)
 
-                            Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(.Key))))
-                            Lines.Add("Kd 1.000000 1.000000 1.000000")
-                            Lines.Add("Ka 1.000000 1.000000 1.000000")
-                            Lines.Add("Ks 1.000000 1.000000 1.000000")
-                            Lines.Add("Ke 0.000000 0.000000 0.000000")
-                            Lines.Add("Ns 0.000000")
-                            Lines.Add("illum 1")
-                            Lines.Add(String.Format("map_Kd {0}", TEXFile))
-                            Lines.Add("")
-                        End If
-
-                    End With
+                        Lines.Add(String.Format("newmtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(texture.Key))))
+                        Lines.Add("Kd 1.000000 1.000000 1.000000")
+                        Lines.Add("Ka 1.000000 1.000000 1.000000")
+                        Lines.Add("Ks 1.000000 1.000000 1.000000")
+                        Lines.Add("Ke 0.000000 0.000000 0.000000")
+                        Lines.Add("Ns 0.000000")
+                        Lines.Add("illum 1")
+                        Lines.Add(String.Format("map_Kd {0}", TEXFile))
+                        Lines.Add("")
+                    End If
                 Next
-
                 File.WriteAllLines(MTLFile, Lines.ToArray)
             Next
 
@@ -100,66 +96,67 @@ Namespace FileWriters
             Lines.Add("")
 
             'all vertices first
-            For h As Integer = 0 To Models.Count - 1
-                With Models(h)
-                    For i As Integer = 0 To .Meshes.Count - 1
-                        For Each triangle As sTriangle In .Meshes(i).TriangleList
-                            For j As Integer = 0 To 2
-                                Dim vi As Integer = triangle.Vertices(j)
-                                Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", .Vertices(vi).Position.X, .Vertices(vi).Position.Y, .Vertices(vi).Position.Z))
-                            Next
+            For Each model In ModelMgr.Models
+                For Each mesh In ModelMgr.ModelData(model.Value.ModelDataID).Meshes
+                    For Each triangle As sTriangle In mesh.TriangleList
+                        For j As Integer = 0 To 2
+                            Dim vi As Integer = triangle.Vertices(j)
+                            Lines.Add(String.Format("v {0:f6} {1:f6} {2:f6}", _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Position.X, _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Position.Y, _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Position.Z))
                         Next
-
                     Next
-                End With
+                Next
             Next
 
             Lines.Add("")
 
             'now vertex normals
-            For h As Integer = 0 To Models.Count - 1
-                With Models(h)
-                    For i As Integer = 0 To .Meshes.Count - 1
-                        For Each triangle As sTriangle In .Meshes(i).TriangleList
-                            For j As Integer = 0 To 2
-                                Dim vi As Integer = triangle.Vertices(j)
-                                Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", .Vertices(vi).Normal.X, .Vertices(vi).Normal.Y, .Vertices(vi).Normal.Z))
-                            Next
+            For Each model In ModelMgr.Models
+                For Each mesh In ModelMgr.ModelData(model.Value.ModelDataID).Meshes
+                    For Each triangle As sTriangle In mesh.TriangleList
+                        For j As Integer = 0 To 2
+                            Dim vi As Integer = triangle.Vertices(j)
+                            Lines.Add(String.Format("vn {0:f6} {1:f6} {2:f6}", _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Normal.X, _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Normal.Y, _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).Normal.Z))
                         Next
                     Next
-                End With
+                Next
+
             Next
 
             Lines.Add("")
 
             'now texture coordinates
-            For h As Integer = 0 To Models.Count - 1
-                With Models(h)
-                    For i As Integer = 0 To .Meshes.Count - 1
-                        For Each triangle As sTriangle In .Meshes(i).TriangleList
-                            For j As Integer = 0 To 2
-                                Dim vi As Integer = triangle.Vertices(j)
-                                Lines.Add(String.Format("vt {0:f6} {1:f6}", .Vertices(vi).TextureCoords.U, 1 - .Vertices(vi).TextureCoords.V)) ' don't ask^^
-                            Next
+            For Each model In ModelMgr.Models
+                For Each mesh In ModelMgr.ModelData(model.Value.ModelDataID).Meshes
+                    For Each triangle As sTriangle In mesh.TriangleList
+                        For j As Integer = 0 To 2
+                            Dim vi As Integer = triangle.Vertices(j)
+                            Lines.Add(String.Format("vt {0:f6} {1:f6}", _
+                                                    ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).TextureCoords.U, _
+                                                    1 - ModelMgr.ModelData(model.Value.ModelDataID).Vertices(vi).TextureCoords.V)) ' don't ask^^
                         Next
                     Next
-                End With
+                Next
             Next
 
             Lines.Add("")
 
             'now triangles with groups and materials
-            For h As Integer = 0 To Models.Count - 1
-                For i As Integer = 0 To Models(h).Meshes.Count - 1
-
+            For Each model In ModelMgr.Models
+                For Each mesh In ModelMgr.ModelData(model.Value.ModelDataID).Meshes
                     CurrGrp += 1
 
                     Lines.Add("")
-                    Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(Models(h).Meshes(i).TextureList(0).TextureID))))
-                    Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(Models(h).Meshes(i).TextureList(0).TextureID))))
+                    Lines.Add(String.Format("g {0}", myHF.StringToPureAscii(myHF.GetBaseName(mesh.TextureList(0).TextureID))))
+                    Lines.Add(String.Format("usemtl {0}", myHF.StringToPureAscii(myHF.GetBaseName(mesh.TextureList(0).TextureID))))
                     Lines.Add(String.Format("s {0}", CurrGrp))
 
-                    For Each triangle As sTriangle In Models(h).Meshes(i).TriangleList
+                    For Each triangle As sTriangle In mesh.TriangleList
                         Lines.Add(String.Format("f {0:d}/{0:d}/{0:d} {1:d}/{1:d}/{1:d} {2:d}/{2:d}/{2:d}", CurrIdx * 3 + 1, CurrIdx * 3 + 2, CurrIdx * 3 + 3))
                         CurrIdx += 1
                     Next

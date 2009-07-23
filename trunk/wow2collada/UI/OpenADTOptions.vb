@@ -91,9 +91,13 @@ Public Class OpenADTOptions
     Private Sub LoadADT()
 
         'reset data structures
-        Models.Clear()
+        ModelMgr.Clear()
+        TextureMgr.Clear()
+        SuspendRender = True
 
-        Dim model As New sModel(myHF.GetBaseName(_FileName))
+        Dim moID As Integer = ModelMgr.AddModel(myHF.GetBaseName(_FileName))
+        Dim mdID As Integer = ModelMgr.AddModelData(myHF.GetBaseName(_FileName))
+        ModelMgr.Models(moID).ModelDataID = mdID
 
         'load textures
         StatusLabel1.Text = "Loading Textures... 0/" & _ADT.TextureFiles.Length
@@ -115,15 +119,11 @@ Public Class OpenADTOptions
                 For k = 0 To 3
                     If Not _ADT.MCNKs(i, j).AlphaMaps(k) Is Nothing Then
                         Key = "Alpha_" & i.ToString("00") & "_" & j.ToString("00") & "_" & k.ToString("00")
-                        If Not model.Textures.ContainsKey(Key) Then model.Textures.Add(Key, New sTexture(_ADT.MCNKs(i, j).AlphaMaps(k)))
+                        TextureMgr.AddTexture(Key, _ADT.MCNKs(i, j).AlphaMaps(k))
                     End If
 
                     Key = _ADT.TextureFiles(_ADT.MCNKs(i, j).Layer(k).TextureID)
-                    If Not model.Textures.ContainsKey(Key) Then
-                        If myMPQ.Locate(Key) Then
-                            model.Textures.Add(Key, New sTexture(BLP.LoadFromStream(myMPQ.LoadFile(Key), Key)))
-                        End If
-                    End If
+                    TextureMgr.AddTexture(Key, Key)
                 Next
             Next
         Next
@@ -245,7 +245,7 @@ Public Class OpenADTOptions
                                     New sVertex(-(xr + 0.5 * dx), yr + 0.5 * dy, zo + .HeightMap8x8(x + 0, y + 0), 0, 0, 1, xt + 0.0625, yt + 0.0625) _
                             }
 
-                            Dim vi As Integer = model.AddVertices(v)
+                            Dim vi As Integer = ModelMgr.AddVerticesToModelData(mdID, v)
                             SubMesh.TriangleList.Add(New sTriangle(vi + 0, vi + 1, vi + 4))
                             SubMesh.TriangleList.Add(New sTriangle(vi + 1, vi + 2, vi + 4))
                             SubMesh.TriangleList.Add(New sTriangle(vi + 2, vi + 3, vi + 4))
@@ -253,12 +253,10 @@ Public Class OpenADTOptions
 
                         Next
                     Next
-                    model.Meshes.Add(SubMesh)
+                    ModelMgr.ModelData(mdID).Meshes.Add(SubMesh)
                 End With
             Next
         Next
-
-        Models.Add(model)
 
         If _ADT.WMOPlacements.Count > 0 Then
             For i As Integer = 0 To ListViewWMO.Items.Count - 1
@@ -325,6 +323,8 @@ Public Class OpenADTOptions
         StatusLabel1.Text = _FileName
         ProgressBar1.Value = 0
         ProgressBar1.ForeColor = Color.FromArgb(255, 255, 0, 0)
+        frmOG.SetupScene()
+        SuspendRender = False
     End Sub
 
     ''' <summary>

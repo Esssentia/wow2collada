@@ -103,7 +103,7 @@ Namespace FileReaders
                             Textures(i).Blending = br.ReadUInt32
                             Dim StartID As UInt32 = br.ReadUInt32 'Texture String Start
                             br.BaseStream.Position = br.BaseStream.Position + 48
-                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID)
+                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID).ToLower
                         Next
                     Case "MOGN" 'Group Names (lets get them just in case...
                         Groups = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
@@ -299,7 +299,7 @@ Namespace FileReaders
                             Textures(i).Blending = br.ReadUInt32
                             Dim StartID As UInt32 = br.ReadUInt32 'Texture String Start
                             br.BaseStream.Position = br.BaseStream.Position + 48
-                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID)
+                            Textures(i).TexID = myHF.GetZeroDelimitedString(MOTX, StartID).ToLower
                         Next
 
                     Case "MOGN" 'Group Names (lets get them just in case...

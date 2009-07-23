@@ -97,7 +97,8 @@ Public Class OpenWMOOptions
         Dim BR As BinaryReader
 
         'reset data structures
-        Models.Clear()
+        ModelMgr.Clear()
+        TextureMgr.Clear()
 
         'load and parse Sub WMOs
         StatusLabel1.Text = "Loading Sub-WMO... 0/" & _SubWMO.Count
@@ -116,7 +117,8 @@ Public Class OpenWMOOptions
             _WMO.LoadSub(BR.ReadBytes(BR.BaseStream.Length))
         Next
 
-        Dim Model As New sModel(myHF.GetBaseName(_FileName))
+        Dim mdID As Integer = ModelMgr.AddModelData(myHF.GetBaseName(_FileName))
+        Dim moID As Integer = ModelMgr.AddModel(myHF.GetBaseName(_FileName))
 
         'load textures
         StatusLabel1.Text = "Loading Textures... 0/" & _WMO.Textures.Length
@@ -134,12 +136,7 @@ Public Class OpenWMOOptions
             Application.DoEvents()
 
             Dim TexFi As String = _WMO.Textures(i).TexID
-            If myMPQ.Locate(TexFi) Then
-                If Not Model.Textures.ContainsKey(TexFi) Then
-                    Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                    If Not TexImg Is Nothing Then Model.Textures(TexFi) = New sTexture(TexImg)
-                End If
-            End If
+            TextureMgr.AddTexture(TexFi, TexFi)
         Next
 
         'load subsets
@@ -158,14 +155,14 @@ Public Class OpenWMOOptions
             Dim CurrMatID As Integer = -1
             Dim submesh As New sSubMesh
 
-            Dim vi As Integer = Model.AddVertices(_WMO.SubSets(i).Vertices)
+            Dim vi As Integer = ModelMgr.AddVerticesToModelData(mdID, _WMO.SubSets(i).Vertices)
 
             For j As Integer = 0 To _WMO.SubSets(i).Triangles.Length - 1
                 Dim MatID As Byte = _WMO.SubSets(i).Materials(j)
                 If MatID < _WMO.Textures.Length Then
 
                     If MatID <> CurrMatID Then
-                        If CurrMatID <> -1 Then Model.Meshes.Add(submesh)
+                        If CurrMatID <> -1 Then ModelMgr.ModelData(mdID).Meshes.Add(submesh)
                         CurrMatID = MatID
                         submesh = New sSubMesh
                         submesh.TextureList.Add(New sTextureEntry(_WMO.Textures(MatID).TexID, "", 0, _WMO.Textures(MatID).Flags, 0, _WMO.Textures(MatID).Blending))
@@ -178,10 +175,9 @@ Public Class OpenWMOOptions
                 End If
             Next
 
-            Model.Meshes.Add(submesh)
+            ModelMgr.ModelData(mdID).Meshes.Add(submesh)
         Next
 
-        Models.Add(Model)
 
         If _WMO.nDoodads > 0 And LoadDoodads.Checked Then
             For i As Integer = 0 To ListView1.Items.Count - 1

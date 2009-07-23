@@ -22,7 +22,7 @@ Partial Class DumpADT
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.chkTexturelist = New System.Windows.Forms.CheckBox
+        Me.chkTextures = New System.Windows.Forms.CheckBox
         Me.chkAlphamaps = New System.Windows.Forms.CheckBox
         Me.chkLayermaps = New System.Windows.Forms.CheckBox
         Me.chkDepthmap = New System.Windows.Forms.CheckBox
@@ -30,20 +30,21 @@ Partial Class DumpADT
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip
         Me.ToolStripProgressBar1 = New System.Windows.Forms.ToolStripProgressBar
         Me.Button1 = New System.Windows.Forms.Button
+        Me.chkXML = New System.Windows.Forms.CheckBox
         Me.StatusStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
-        'chkTexturelist
+        'chkTextures
         '
-        Me.chkTexturelist.AutoSize = True
-        Me.chkTexturelist.Checked = True
-        Me.chkTexturelist.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkTexturelist.Location = New System.Drawing.Point(13, 13)
-        Me.chkTexturelist.Name = "chkTexturelist"
-        Me.chkTexturelist.Size = New System.Drawing.Size(110, 17)
-        Me.chkTexturelist.TabIndex = 1
-        Me.chkTexturelist.Text = "Dump Texturelists"
-        Me.chkTexturelist.UseVisualStyleBackColor = True
+        Me.chkTextures.AutoSize = True
+        Me.chkTextures.Checked = True
+        Me.chkTextures.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkTextures.Location = New System.Drawing.Point(13, 13)
+        Me.chkTextures.Name = "chkTextures"
+        Me.chkTextures.Size = New System.Drawing.Size(98, 17)
+        Me.chkTextures.TabIndex = 1
+        Me.chkTextures.Text = "Dump Textures"
+        Me.chkTextures.UseVisualStyleBackColor = True
         '
         'chkAlphamaps
         '
@@ -84,8 +85,6 @@ Partial Class DumpADT
         'chkCombined
         '
         Me.chkCombined.AutoSize = True
-        Me.chkCombined.Checked = True
-        Me.chkCombined.CheckState = System.Windows.Forms.CheckState.Checked
         Me.chkCombined.Location = New System.Drawing.Point(13, 109)
         Me.chkCombined.Name = "chkCombined"
         Me.chkCombined.Size = New System.Drawing.Size(237, 17)
@@ -118,18 +117,31 @@ Partial Class DumpADT
         Me.Button1.Text = "OK"
         Me.Button1.UseVisualStyleBackColor = True
         '
+        'chkXML
+        '
+        Me.chkXML.AutoSize = True
+        Me.chkXML.Checked = True
+        Me.chkXML.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkXML.Location = New System.Drawing.Point(13, 132)
+        Me.chkXML.Name = "chkXML"
+        Me.chkXML.Size = New System.Drawing.Size(105, 17)
+        Me.chkXML.TabIndex = 8
+        Me.chkXML.Text = "Dump XML Data"
+        Me.chkXML.UseVisualStyleBackColor = True
+        '
         'DumpADT
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(423, 195)
+        Me.Controls.Add(Me.chkXML)
         Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.StatusStrip1)
         Me.Controls.Add(Me.chkCombined)
         Me.Controls.Add(Me.chkDepthmap)
         Me.Controls.Add(Me.chkLayermaps)
         Me.Controls.Add(Me.chkAlphamaps)
-        Me.Controls.Add(Me.chkTexturelist)
+        Me.Controls.Add(Me.chkTextures)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
         Me.MinimizeBox = False
@@ -143,7 +155,7 @@ Partial Class DumpADT
         Me.PerformLayout()
 
     End Sub
-    Friend WithEvents chkTexturelist As System.Windows.Forms.CheckBox
+    Friend WithEvents chkTextures As System.Windows.Forms.CheckBox
     Friend WithEvents chkAlphamaps As System.Windows.Forms.CheckBox
     Friend WithEvents chkLayermaps As System.Windows.Forms.CheckBox
     Friend WithEvents chkDepthmap As System.Windows.Forms.CheckBox
@@ -151,5 +163,6 @@ Partial Class DumpADT
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents ToolStripProgressBar1 As System.Windows.Forms.ToolStripProgressBar
     Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents chkXML As System.Windows.Forms.CheckBox
 
 End Class

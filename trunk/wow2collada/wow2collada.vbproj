@@ -65,6 +65,10 @@
   <ItemGroup>
     <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="Microsoft.DirectX.Direct3D, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="OpenTK, Version=0.9.8.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\opentk-0.9.8-1\Binaries\Release\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -83,14 +87,16 @@
     <Reference Include="System.Windows.Forms">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Tao.OpenGl, Version=2.1.0.12, Culture=neutral, PublicKeyToken=1ca010269a4501ef, processorArchitecture=MSIL" />
-    <Reference Include="Tao.Platform.Windows, Version=1.0.0.5, Culture=neutral, PublicKeyToken=701104b2da67a104, processorArchitecture=MSIL" />
+    <Reference Include="System.XML" />
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
+    <Import Include="OpenTK" />
+    <Import Include="OpenTK.Graphics" />
+    <Import Include="OpenTK.Math" />
     <Import Include="System" />
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
@@ -105,6 +111,12 @@
       <DependentUpon>ADTExplorer.vb</DependentUpon>
     </Compile>
     <Compile Include="UI\ADTExplorer.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\OpenRegionOptions.Designer.vb">
+      <DependentUpon>OpenRegionOptions.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UI\OpenRegionOptions.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\DumpADT.Designer.vb">
@@ -175,6 +187,7 @@
     <Compile Include="FileReaders\wow2collada.FileReaders.DBC.vb" />
     <Compile Include="FileReaders\wow2collada.FileReaders.MPQ.vb" />
     <Compile Include="FileReaders\wow2collada.FileReaders.BLP.vb" />
+    <Compile Include="Utilities\wow2collada.ModelManager.vb" />
     <Compile Include="Utilities\wow2collada.HelperFunctions.vb" />
     <Compile Include="FileReaders\wow2collada.FileReaders.ADT.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -192,10 +205,14 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Utilities\wow2collada.TextureManager.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\ADTExplorer.resx">
       <DependentUpon>ADTExplorer.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\OpenRegionOptions.resx">
+      <DependentUpon>OpenRegionOptions.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\DumpADT.resx">
       <DependentUpon>DumpADT.vb</DependentUpon>
@@ -285,7 +302,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="favicon.ico" />
-    <None Include="Resources\DefaultTexture.bmp" />
+    <None Include="Resources\Regions.xml" />
+    <None Include="Resources\Regions.xml.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
