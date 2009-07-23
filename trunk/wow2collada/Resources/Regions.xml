@@ -1,0 +1,14 @@
+<continents>
+  <continent name="azeroth" file="world\maps\azeroth\azeroth_{0}_{1}.adt">
+    <region name="redridge" xmin="35" xmax="38" ymin="48" ymax="50"/>
+  </continent>
+  <continent name="kalimdor" file="world\maps\kalimdor\kalimdor_{0}_{1}.adt">
+    <region name="mulgore" xmin="31" xmax="34" ymin="33" ymax="38"/>
+  </continent>
+  <continent name="outland" file="world\maps\expansion01\expansion01_{0}_{1}.adt">
+    <region name="nagrand" xmin="13" xmax="21" ymin="33" ymax="38"/>
+  </continent>
+  <continent name="northrend" file="world\maps\northend\northend_{0}_{1}.adt">
+    <region name="borean tundra" xmin="17" xmax="26" ymin="23" ymax="29"/>
+  </continent>
+</continents>
