@@ -52,6 +52,7 @@ Partial Class MainForm
         Me.FileListPopupOpenInHexViewer = New System.Windows.Forms.ToolStripMenuItem
         Me.FileListSaveFile = New System.Windows.Forms.SaveFileDialog
         Me.SaveModelDialog = New System.Windows.Forms.SaveFileDialog
+        Me.RegionLoaderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem
         Me.MenuStrip1.SuspendLayout()
         Me.StatusStrip1.SuspendLayout()
         Me.SplitContainer2.Panel1.SuspendLayout()
@@ -85,23 +86,23 @@ Partial Class MainForm
         'ToolStripSeparator1
         '
         Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
-        Me.ToolStripSeparator1.Size = New System.Drawing.Size(138, 6)
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(149, 6)
         '
         'SaveAsToolStripMenuItem
         '
         Me.SaveAsToolStripMenuItem.Name = "SaveAsToolStripMenuItem"
-        Me.SaveAsToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
+        Me.SaveAsToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.SaveAsToolStripMenuItem.Text = "Save 3D as ..."
         '
         'QuitToolStripMenuItem
         '
         Me.QuitToolStripMenuItem.Name = "QuitToolStripMenuItem"
-        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
+        Me.QuitToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.QuitToolStripMenuItem.Text = "Quit"
         '
         'ToolsToolStripMenuItem
         '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ADTExplorerToolStripMenuItem})
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ADTExplorerToolStripMenuItem, Me.RegionLoaderToolStripMenuItem})
         Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
         Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(48, 20)
         Me.ToolsToolStripMenuItem.Text = "Tools"
@@ -109,7 +110,7 @@ Partial Class MainForm
         'ADTExplorerToolStripMenuItem
         '
         Me.ADTExplorerToolStripMenuItem.Name = "ADTExplorerToolStripMenuItem"
-        Me.ADTExplorerToolStripMenuItem.Size = New System.Drawing.Size(142, 22)
+        Me.ADTExplorerToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
         Me.ADTExplorerToolStripMenuItem.Text = "ADT Explorer"
         '
         'TestcasesToolStripMenuItem
@@ -299,6 +300,12 @@ Partial Class MainForm
         'SaveModelDialog
         '
         '
+        'RegionLoaderToolStripMenuItem
+        '
+        Me.RegionLoaderToolStripMenuItem.Name = "RegionLoaderToolStripMenuItem"
+        Me.RegionLoaderToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.RegionLoaderToolStripMenuItem.Text = "Region Loader"
+        '
         'MainForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -361,5 +368,6 @@ Partial Class MainForm
     Friend WithEvents ToolsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ADTExplorerToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ADTNorthend2525ToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents RegionLoaderToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
 
 End Class

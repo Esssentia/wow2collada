@@ -35,12 +35,76 @@ Public Class DumpADT
         ToolStripProgressBar1.Maximum = 256
         ToolStripProgressBar1.Value = 0
 
-        If chkTexturelist.Checked Then
-            Lines.Clear()
+        If chkXML.Checked Then
+            Dim xmlfile As System.Xml.XmlWriter = Xml.XmlWriter.Create(Directory & "/adt.xml")
+
+            xmlfile.WriteStartDocument(True)
+            xmlfile.WriteStartElement("adt")
+
+            'global stuff
+            '--------------
+
+            'texture list
+            xmlfile.WriteStartElement("textures")
             For i As Integer = 0 To _ADT.TextureFiles.Count - 1
-                Lines.Add(i.ToString("000") & " " & _ADT.TextureFiles(i))
+                xmlfile.WriteStartElement("texture")
+                xmlfile.WriteAttributeString("id", i)
+                xmlfile.WriteValue(_ADT.TextureFiles(i))
+                xmlfile.WriteEndElement()
             Next
-            IO.File.WriteAllLines(Directory & "/textures.txt", Lines.ToArray)
+            xmlfile.WriteEndElement()
+
+            'chunk wide stuff
+            '----------------
+
+            For tx As Integer = 0 To 15
+                For ty As Integer = 0 To 15
+                    With _ADT.MCNKs(tx, ty)
+                        xmlfile.WriteStartElement("tile")
+                        xmlfile.WriteAttributeString("x", tx)
+                        xmlfile.WriteAttributeString("y", ty)
+
+                        'depthmap
+                        xmlfile.WriteStartElement("depthmap")
+                        For i As Integer = 0 To 8
+                            For j As Integer = 0 To 8
+                                xmlfile.WriteStartElement("point")
+                                xmlfile.WriteAttributeString("x", i)
+                                xmlfile.WriteAttributeString("y", j)
+                                xmlfile.WriteAttributeString("z", .HeightMap9x9(i, j) + .Position.Z)
+                                xmlfile.WriteEndElement()
+                                If i < 8 And j < 8 Then
+                                    xmlfile.WriteStartElement("point")
+                                    xmlfile.WriteAttributeString("x", i + 0.5)
+                                    xmlfile.WriteAttributeString("y", j + 0.5)
+                                    xmlfile.WriteAttributeString("z", .HeightMap8x8(i, j) + .Position.Z)
+                                    xmlfile.WriteEndElement()
+                                End If
+                            Next
+                        Next
+                        xmlfile.WriteEndElement()
+
+                        'tile texture info
+                        xmlfile.WriteStartElement("textures")
+                        For i As Integer = 0 To .Layer.Count - 1
+                            If i = 0 Or Not .AlphaMaps(i) Is Nothing Then
+                                xmlfile.WriteStartElement("texture")
+                                xmlfile.WriteAttributeString("layer", i)
+                                xmlfile.WriteAttributeString("id", .Layer(i).TextureID)
+                                xmlfile.WriteValue(_ADT.TextureFiles(.Layer(i).TextureID))
+                                xmlfile.WriteEndElement()
+                            End If
+                        Next
+                        xmlfile.WriteEndElement()
+
+
+                        xmlfile.WriteEndElement()
+                    End With
+                Next
+            Next
+
+            xmlfile.WriteEndDocument()
+            xmlfile.Close()
         End If
 
         If chkDepthmap.Checked Then myHF.DepthmapFromADT(_ADT, Directory & "/")
@@ -53,20 +117,9 @@ Public Class DumpADT
                     If chkAlphamaps.Checked Then
                         For i As Integer = 0 To .AlphaMaps.Count - 1
                             If Not .AlphaMaps(i) Is Nothing Then
-                                .AlphaMaps(i).Save(Directory & "/" & ChunkID & "_alpha_orig" & i.ToString("00") & ".png", Imaging.ImageFormat.Png)
-                                'Using Map As Bitmap = NormalizeAlphaMap(.AlphaMaps(i))
-                                'Map.Save(Directory & "/" & ChunkID & "_alpha_norm" & i.ToString("00") & ".png", ImageFormat.Png)
-                                'End Using
+                                .AlphaMaps(i).Save(Directory & "/" & ChunkID & "_alpha" & i.ToString("00") & ".png", Imaging.ImageFormat.Png)
                             End If
                         Next
-                    End If
-
-                    If chkTexturelist.Checked Then
-                        Lines.Clear()
-                        For i As Integer = 0 To .Layer.Count - 1
-                            If i = 0 Or Not .AlphaMaps(i) Is Nothing Then Lines.Add(i.ToString("000") & " " & _ADT.TextureFiles(.Layer(i).TextureID))
-                        Next
-                        IO.File.WriteAllLines(Directory & "/" & ChunkID & "_layers.txt", Lines.ToArray)
                     End If
 
                     Application.DoEvents()
@@ -84,14 +137,14 @@ Public Class DumpADT
             Next
         Next
 
-        If chkTexturelist.Checked Then
+        If chkTextures.Checked Then
             For i As Integer = 0 To _ADT.TextureFiles.Length - 1
                 Dim TexFi As String = _ADT.TextureFiles(i)
                 If myMPQ.Locate(TexFi) Then
                     Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
                     If Not TexImg Is Nothing Then
-                        TexImg.Save(Directory & "/" & myHF.GetBaseName(TexFi) & "_orig.png", System.Drawing.Imaging.ImageFormat.Png)
-                        myHF.NormalizeTexture(TexImg).Save(Directory & "/" & myHF.GetBaseName(TexFi) & "_norm.png", System.Drawing.Imaging.ImageFormat.Png)
+                        TexImg.Save(Directory & "/" & myHF.GetBaseName(TexFi) & ".png", System.Drawing.Imaging.ImageFormat.Png)
+                        'myHF.NormalizeTexture(TexImg).Save(Directory & "/" & myHF.GetBaseName(TexFi) & "_norm.png", System.Drawing.Imaging.ImageFormat.Png)
                     End If
                 End If
             Next

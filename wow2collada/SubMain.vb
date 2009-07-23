@@ -5,7 +5,9 @@ Module Main
     Public myHF As HelperFunctions
     Public myDBC As FileReaders.DBC
     Public myMPQ As FileReaders.MPQ
-    Public Models As New List(Of sModel)
+    Public ModelMgr As New ModelManager
+    Public TextureMgr As New TextureManager
+    Public SuspendRender As Boolean = True
 
     Public Sub Main()
         'must be first, will be used by all other functions...
@@ -26,10 +28,13 @@ Module Main
         If Not myDBC.LoadBaseDBCs() Then RequiredFileNotFound()
 
         frm.Show()
+
+        frmOG.GLInit()
         frmOG.Show()
 
+        SuspendRender = False
         ' While the form is valid, render the scene and process messages.
-        Do While frm.Created
+        Do While frm.Visible And frmOG.Visible
             frmOG.RenderFrame()
             Application.DoEvents()
         Loop

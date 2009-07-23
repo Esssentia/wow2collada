@@ -556,44 +556,6 @@ Public Class sTriangle
 
 End Class
 
-''' <summary>
-''' Structure to hold Texture information (Bitmap, TextureObject and Filename)
-''' </summary>
-''' <remarks>The TextureObject is dependent on the Direct3D device, so if the device changes, the textures have to be recalculated!</remarks>
-Public Class sTexture
-    Dim _TextureMap As Bitmap
-    Dim _OpenGLTexID As Integer
-
-    Public Property TextureMap() As Bitmap
-        Get
-            Return _TextureMap
-        End Get
-        Set(ByVal value As Bitmap)
-            _TextureMap = value
-        End Set
-    End Property
-
-    Public Property OpenGLTexID() As Integer
-        Get
-            Return _OpenGLTexID
-        End Get
-        Set(ByVal value As Integer)
-            _OpenGLTexID = value
-        End Set
-    End Property
-
-    Sub New()
-        _OpenGLTexID = -1
-        _TextureMap = New Bitmap(1, 1, Imaging.PixelFormat.Format32bppArgb)
-    End Sub
-
-    Sub New(ByVal TextureMap As Bitmap)
-        _TextureMap = TextureMap
-        _OpenGLTexID = -1
-    End Sub
-
-End Class
-
 Public Class sTextureEntry
     Dim _TextureID As String
     Dim _AlphaMapID As String
@@ -689,6 +651,7 @@ Public Class sSubMesh
     Dim _TriangleList As List(Of sTriangle)
     Dim _isADT As Boolean = False
     Dim _isWotLK As Boolean = False
+    Dim _OpenGLVBOIndicesID As Integer
 
     Public Property isADT() As Boolean
         Get
@@ -726,6 +689,33 @@ Public Class sSubMesh
         End Set
     End Property
 
+    Public Property OpenGLVBOIndicesID() As Integer
+        Get
+            Return _OpenGLVBOIndicesID
+        End Get
+        Set(ByVal value As Integer)
+            _OpenGLVBOIndicesID = value
+        End Set
+    End Property
+
+    Public ReadOnly Property OpenGLVBOIndicesCount() As Integer
+        Get
+            Return _TriangleList.Count * 3
+        End Get
+    End Property
+
+    Public ReadOnly Property VBOIndices() As Integer()
+        Get
+            Dim VT(_TriangleList.Count * 3 - 1) As Integer
+            For i As Integer = 0 To _TriangleList.Count - 1
+                VT(3 * i + 0) = _TriangleList(i).V1
+                VT(3 * i + 1) = _TriangleList(i).V2
+                VT(3 * i + 2) = _TriangleList(i).V3
+            Next
+            Return VT
+        End Get
+    End Property
+
     Public Property OpenGLMeshID() As Integer
         Get
             Return _OpenGLMeshID
@@ -758,213 +748,6 @@ Public Class sSubMesh
 
         Return Out
     End Function
-
-End Class
-
-''' <summary>
-''' Class to hold complete Model Information (resolving all lookups and such)
-''' </summary>
-''' <remarks></remarks>
-Public Class sModel
-    Private _Name As String
-    Private _Textures As Dictionary(Of String, sTexture)
-    Private _Meshes As List(Of sSubMesh)
-    Private _Bones As sBone()
-    Private _Vertices As List(Of sVertex)
-    Private _ScaleRotTrans As sMatrix4
-    Private _OpenGLBoneMeshID As Integer
-
-    Public ReadOnly Property Textures() As Dictionary(Of String, sTexture)
-        Get
-            Return _Textures
-        End Get
-    End Property
-
-    Public ReadOnly Property Meshes() As List(Of sSubMesh)
-        Get
-            Return _Meshes
-        End Get
-    End Property
-
-    Public ReadOnly Property Bones() As sBone()
-        Get
-            Return _Bones
-        End Get
-    End Property
-
-    Public ReadOnly Property Vertices() As List(Of sVertex)
-        Get
-            Return _Vertices
-        End Get
-    End Property
-
-    Public ReadOnly Property VerticesTransformed() As List(Of sVertex)
-        Get
-            Dim VT As New List(Of sVertex)
-            For Each VO As sVertex In _Vertices
-                'scale -> rot -> trans
-                'new.Position = sVector3.Rotate(_Vertices(.VertexIndex(m)).Position * Scale, Orientation) + Position
-                'new.Normal = sVector3.Rotate(_Vertices(.VertexIndex(m)).Normal, Orientation)
-                VT.Add(New sVertex(_ScaleRotTrans * VO.Position, _ScaleRotTrans * VO.Normal, VO.TextureCoords, VO.BoneWeights, VO.Boneindices))
-            Next
-            Return VT
-        End Get
-
-    End Property
-
-    Public ReadOnly Property Name() As String
-        Get
-            Return _Name
-        End Get
-    End Property
-
-    Public Property ScaleRotTrans() As sMatrix4
-        Get
-            Return _ScaleRotTrans
-        End Get
-        Set(ByVal value As sMatrix4)
-            _ScaleRotTrans = value
-        End Set
-    End Property
-
-    Public Property OpenGLBoneMeshID() As Integer
-        Get
-            Return _OpenGLBoneMeshID
-        End Get
-        Set(ByVal value As Integer)
-            _OpenGLBoneMeshID = value
-        End Set
-    End Property
-
-    Public Sub SetOpenGLTextureID(ByVal TexID As String, ByVal OpenGLID As Integer)
-        If _Textures.ContainsKey(TexID) Then _Textures(TexID).OpenGLTexID = OpenGLID
-    End Sub
-
-    Public Sub New(ByVal Name As String)
-        _Name = Name
-        _Textures = New Dictionary(Of String, sTexture)
-        _Meshes = New List(Of sSubMesh)
-        _Vertices = New List(Of sVertex)
-        _ScaleRotTrans = New sMatrix4(New sQuaternion(0, 0, 0, 1), New sVector3(0, 0, 0), 1)
-    End Sub
-
-    Public Function AddVertex(ByVal V As sVertex) As Integer
-        _Vertices.Add(V)
-        Return _Vertices.Count - 1
-    End Function
-
-    Public Function AddVertices(ByVal V As sVertex()) As Integer
-        Dim i As Integer = _Vertices.Count
-        _Vertices.AddRange(V)
-        Return i
-    End Function
-
-    Public Sub FromM2(ByVal MD20 As FileReaders.M2, ByVal SKIN As FileReaders.SKIN, ByVal ANIM As FileReaders.ANIM, ByVal ScaleRotTrans As sMatrix4)
-        _ScaleRotTrans = ScaleRotTrans
-        FromM2(MD20, SKIN, ANIM)
-    End Sub
-
-    Public Sub FromM2(ByVal MD20 As FileReaders.M2, ByVal SKIN As FileReaders.SKIN, ByVal ANIM As FileReaders.ANIM, ByVal Position As sVector3, ByVal Orientation As sQuaternion, ByVal Scale As Single)
-        _ScaleRotTrans = New sMatrix4(Orientation, Position, Scale)
-        FromM2(MD20, SKIN, ANIM)
-    End Sub
-
-    Public Sub FromM2(ByVal MD20 As FileReaders.M2, ByVal SKIN As FileReaders.SKIN, ByVal ANIM As FileReaders.ANIM)
-        Dim BLP As New FileReaders.BLP
-
-        If Not MD20.Bones Is Nothing Then
-            ReDim _Bones(MD20.Bones.Count - 1)
-            _Bones = MD20.Bones
-        End If
-
-        If Not MD20.Vertices Is Nothing Then _Vertices.AddRange(MD20.Vertices)
-
-        If Not SKIN.SubMeshes Is Nothing Then
-
-            For i As Integer = 0 To SKIN.SubMeshes.Length - 1
-
-                Dim mesh As New sSubMesh()
-
-                For j As Integer = 0 To SKIN.TextureUnits.Length - 1
-                    If SKIN.TextureUnits(j).SubmeshIndex1 = i Then
-                        Dim TexID As String = MD20.TextureLookup(SKIN.TextureUnits(j).Texture)
-                        Dim TexFi As String = MD20.Textures(TexID).Filename
-
-                        If myMPQ.Locate(TexFi) Then
-                            If Not _Textures.ContainsKey(TexFi) Then
-                                Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                                If Not TexImg Is Nothing Then _Textures(TexFi) = New sTexture(TexImg)
-                            End If
-                            mesh.TextureList.Add(New sTextureEntry(TexFi, "", MD20.RenderFlags(SKIN.TextureUnits(j).RenderFlags).Flags, 0, MD20.RenderFlags(SKIN.TextureUnits(j).RenderFlags).Blending, 0))
-                        End If
-                    End If
-                Next
-
-                For j As Integer = 0 To SKIN.SubMeshes(i).nTriangles - 1
-                    Dim k As Integer = SKIN.SubMeshes(i).StartTriangle + j
-                    With SKIN.Triangles(k)
-                        mesh.TriangleList.Add(New sTriangle(.VertexIndex(0), .VertexIndex(1), .VertexIndex(2)))
-                    End With
-                Next
-
-                _Meshes.Add(mesh)
-
-            Next
-        End If
-    End Sub
-
-    Public Sub FromWMO(ByVal WMO As FileReaders.WMO, ByVal ScaleRotTrans As sMatrix4)
-        _ScaleRotTrans = ScaleRotTrans
-        FromWMO(WMO)
-    End Sub
-
-    Public Sub FromWMO(ByVal WMO As FileReaders.WMO, ByVal Position As sVector3, ByVal Orientation As sQuaternion)
-        _ScaleRotTrans = New sMatrix4(Orientation, Position, 1)
-        FromWMO(WMO)
-    End Sub
-
-    Public Sub FromWMO(ByVal WMO As FileReaders.WMO)
-        Dim BLP As New FileReaders.BLP
-
-        'load textures
-        For i As Integer = 0 To WMO.Textures.Length - 1
-            Dim TexFi As String = WMO.Textures(i).TexID
-            If myMPQ.Locate(TexFi) Then
-                If Not _Textures.ContainsKey(TexFi) Then
-                    Dim TexImg As Bitmap = BLP.LoadFromStream(myMPQ.LoadFile(TexFi), TexFi)
-                    If Not TexImg Is Nothing Then _Textures(TexFi) = New sTexture(TexImg)
-                End If
-            End If
-        Next
-
-        'load subsets
-
-        For i As Integer = 0 To WMO.SubSets.Count - 1
-            Dim CurrMatID As Integer = -1
-            Dim submesh As New sSubMesh
-            Dim vi As Integer = AddVertices(WMO.SubSets(i).Vertices)
-
-            For j As Integer = 0 To WMO.SubSets(i).Triangles.Length - 1
-                Dim MatID As Byte = WMO.SubSets(i).Materials(j)
-                If MatID < WMO.Textures.Length Then
-
-                    If MatID <> CurrMatID Then
-                        If CurrMatID <> -1 Then _Meshes.Add(submesh)
-                        CurrMatID = MatID
-                        submesh = New sSubMesh
-                        submesh.TextureList.Add(New sTextureEntry(WMO.Textures(MatID).TexID, "", 0, WMO.Textures(MatID).Flags, 0, WMO.Textures(MatID).Blending))
-
-                    End If
-
-                    With WMO.SubSets(i).Triangles(j)
-                        submesh.TriangleList.Add(New sTriangle(vi + .V1, vi + .V2, vi + .V3))
-                    End With
-                End If
-            Next
-
-            _Meshes.Add(submesh)
-        Next
-    End Sub
 
 End Class
 
@@ -1142,47 +925,9 @@ Public Class HelperFunctions
 
         Select Case FileName.Substring(FileName.LastIndexOf(".") + 1).ToLower
             Case "m2", "mdx"
-                'clear triangle and texture lists
-
-                'Textures.Clear()
-                'SubMeshes.Clear()
-
-                Models.Clear()
-
+                ModelMgr.Clear()
+                TextureMgr.Clear()
                 AddM2Model(FileName, New sVector3(0, 0, 0), New sQuaternion(0, 0, 0, 1), 1.0F)
-
-                'CreateVertexBufferFromM2(MD20, SKIN, New sVector3(0, 0, 0), New sQuaternion(0, 0, 0, 1), 1) 'textured
-
-                out.Add("Model: " & Models(0).Name)
-                out.Add("Meshes: " & Models(0).Meshes.Count)
-
-                'For i As Integer = 0 To MD20.AnimationSequences.Length - 1
-                ' out.Add(" Animation Sequence: " & i & " -> " & myDBC.AnimationData(MD20.AnimationSequences(i).AnimationID).Name)
-                ' Next
-
-
-                'For i As Integer = 0 To MD20.TextureLookup.Length - 1
-                ' out.Add(" Texture Map: " & i & " -> " & MD20.TextureLookup(i))
-                ' Next
-
-                'out.Add("SKIN File: " & FileNameSKIN)
-                'out.Add("SKIN Triangles: " & SKIN.Triangles.Length)
-                'out.Add("SKIN Boneindices: " & SKIN.BoneIndices.Length)
-                'out.Add("SKIN Submeshes: " & SKIN.SubMeshes.Length)
-
-                'For i As Integer = 0 To SKIN.SubMeshes.Length - 1
-                '    Dim TexID As Integer = -1
-                '    For j As Integer = 0 To SKIN.TextureUnits.Length - 1
-                '        If SKIN.TextureUnits(j).SubmeshIndex1 = i Then TexID = MD20.TextureLookup(SKIN.TextureUnits(j).Texture)
-                '    Next
-                '    out.Add(String.Format(" Submesh {0} [SubID={1}: Bones={2}, Tris={3}, Verts={4}, TexID={5} ({6})]", i, SKIN.SubMeshes(i).ID, SKIN.SubMeshes(i).nBones, SKIN.SubMeshes(i).nTriangles, SKIN.SubMeshes(i).nVertices, TexID, "")) 'Textures.ElementAt(TexID).Key))
-                'Next
-
-                For i As Integer = 0 To Models(0).Textures.Count - 1
-                    With Models(0).Textures.ElementAt(i)
-                        out.Add(String.Format(" Texture [{0}] -> [{1}]", .Key, myMPQ.LocateMPQ(.Key)))
-                    End With
-                Next
 
             Case "wmo"
                 Dim FileNameWMO As String = FileName
@@ -1200,10 +945,23 @@ Public Class HelperFunctions
                 out.Add("Unknown file format: " & FileName.Substring(FileName.LastIndexOf(".") + 1).ToLower)
         End Select
 
-        ' tranfer the data to the 3D subsystem
-        'frm3D.ResetView()
-        frmOG.ResetView()
+        out.Add("Models:")
+        For Each model In ModelMgr.Models
+            out.Add(String.Format("Model: {0}", model.Value.Name))
+            out.Add(String.Format("   Bones: {0}", ModelMgr.ModelData(model.Value.ModelDataID).Bones.Count))
+            out.Add(String.Format("   Vertices: {0}", ModelMgr.ModelData(model.Value.ModelDataID).Vertices.Count))
+            out.Add(String.Format("   Meshes: {0}", ModelMgr.ModelData(model.Value.ModelDataID).Meshes.Count))
+            For Each mesh In ModelMgr.ModelData(model.Value.ModelDataID).Meshes
+                out.Add(String.Format("      Tris: {0}, Textures: {1}", mesh.TriangleList.Count, mesh.TextureList.Count))
+            Next
+        Next
 
+        out.Add("Textures:")
+        For Each texture In TextureMgr.Textures
+            out.Add(String.Format("   Texture [{0}] -> [{1}]", texture.Key, myMPQ.LocateMPQ(texture.Key)))
+        Next
+
+        frmOG.ResetView()
         Return out
     End Function
 
@@ -1212,22 +970,21 @@ Public Class HelperFunctions
     End Sub
 
     Public Sub AddM2Model(ByVal Modelfile As String, ByVal ScaleRotTrans As sMatrix4)
+        If ModelMgr.GetModelDataIDFromName(myHF.GetBaseName(Modelfile)) <> -1 Then
+            ModelMgr.AddModelFromM2NoData(myHF.GetBaseName(Modelfile), ScaleRotTrans)
+        Else
+            Dim MD20 As New FileReaders.M2
+            Dim SKIN As New FileReaders.SKIN
+            Dim ANIM As New FileReaders.ANIM
+            Dim FileNameMD20 As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + ".m2"
+            Dim FileNameSKIN As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + "00.skin"
+            Dim FileNameANIM As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + ".anim"
 
-        'Debug.Print(String.Format("p:({0:f3}/{1:f3}/{2:f3}) r:({3:f3}/{4:f3}/{5:f3}) s:{6:f3} m:{7}", Pos.X, Pos.Y, Pos.Z, Rot.X, Rot.Y, Rot.Z, Scale, Modelfile))
+            MD20.Load(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
+            SKIN.Load(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
 
-        Dim MD20 As New FileReaders.M2
-        Dim SKIN As New FileReaders.SKIN
-        Dim ANIM As New FileReaders.ANIM
-        Dim FileNameMD20 As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + ".m2"
-        Dim FileNameSKIN As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + "00.skin"
-        Dim FileNameANIM As String = Modelfile.Substring(0, Modelfile.LastIndexOf(".")) + ".anim"
-
-        MD20.Load(myMPQ.LoadFile(FileNameMD20), FileNameMD20)
-        SKIN.Load(myMPQ.LoadFile(FileNameSKIN), FileNameSKIN)
-
-        Dim SubModel As New sModel(myHF.GetBaseName(Modelfile))
-        SubModel.FromM2(MD20, SKIN, ANIM, ScaleRotTrans)
-        Models.Add(SubModel)
+            ModelMgr.AddModelFromM2(myHF.GetBaseName(Modelfile), MD20, SKIN, ANIM, ScaleRotTrans)
+        End If
     End Sub
 
     Public Sub AddWMOModel(ByVal Modelfile As String, ByVal wPos As sVector3, ByVal wRot As sQuaternion)
@@ -1248,9 +1005,7 @@ Public Class HelperFunctions
         End While
 
         Dim mWMO As New sMatrix4(wRot, wPos, 1)
-        Dim SubModel As New sModel(myHF.GetBaseName(Modelfile))
-        SubModel.FromWMO(WMO, mWMO)
-        Models.Add(SubModel)
+        ModelMgr.AddModelFromWMO(myHF.GetBaseName(Modelfile), WMO, mWMO)
 
         If WMO.Doodads.Count > 0 Then
             Dim id As Integer = WMO.DoodadSets(0).index
@@ -1330,17 +1085,38 @@ Public Class HelperFunctions
     ''' <returns>The depthmap (128x128)</returns>
     ''' <remarks></remarks>
     Public Function DepthmapFromADT(ByVal ADT As FileReaders.ADT, Optional ByVal Path As String = "") As Bitmap
-        Dim dm(128, 128) As Single
+        Dim dm(144, 144) As Single
         Dim zh As Single = -99999
         Dim zl As Single = 99999
         Dim z As Single
 
+
+        '  0/0   0/1   0/2   0/3   0/4   0/5   0/6   0/7   0/8    <- 9x9 matrix
+        '     0/0   0/1   0/2   0/3   0/4   0/5   0/6   0/7       <- 8x8 matrix
+        '  1/0   1/1   1/2   1/3   1/4   1/5   1/6   1/7   1/8
+        '     1/0   1/1   1/2   1/3   1/4   1/5   1/6   1/7
+        '  2/0   2/1   2/2   2/3   2/4   2/5   2/6   2/7   2/8
+        '     2/0   2/1   2/2   2/3   2/4   2/5   2/6   2/7
+        '  3/0   3/1   3/2   3/3   3/4   3/5   3/6   3/7   3/8
+        '     3/0   3/1   3/2   3/3   3/4   3/5   3/6   3/7
+        '  4/0   4/1   4/2   4/3   4/4   4/5   4/6   4/7   4/8
+        '     4/0   4/1   4/2   4/3   4/4   4/5   4/6   4/7
+        '  5/0   5/1   5/2   5/3   5/4   5/5   5/6   5/7   5/8
+        '     5/0   5/1   5/2   5/3   5/4   5/5   5/6   5/7
+        '  6/0   6/1   6/2   6/3   6/4   6/5   6/6   6/7   6/8
+        '     6/0   6/1   6/2   6/3   6/4   6/5   6/6   6/7
+        '  7/0   7/1   7/2   7/3   7/4   7/5   7/6   7/7   7/8
+        '     7/0   7/1   7/2   7/3   7/4   7/5   7/6   7/7
+        '  8/0   8/1   8/2   8/3   8/4   8/5   8/6   8/7   8/8
+
+
+
         For x As Integer = 0 To 15
             For y As Integer = 0 To 15
-                For i As Integer = 0 To 7
-                    For j As Integer = 0 To 7
-                        z = ADT.MCNKs(x, y).HeightMap8x8(i, j) + ADT.MCNKs(x, y).Position.Z
-                        dm(x * 8 + i, y * 8 + j) = z
+                For i As Integer = 0 To 8
+                    For j As Integer = 0 To 8
+                        z = ADT.MCNKs(x, y).HeightMap9x9(i, j) + ADT.MCNKs(x, y).Position.Z
+                        dm(x * 9 + i, y * 9 + j) = z
                         zl = IIf(z < zl, z, zl)
                         zh = IIf(z > zh, z, zh)
                     Next
@@ -1348,12 +1124,12 @@ Public Class HelperFunctions
             Next
         Next
 
-        Dim Depthm As New Bitmap(128, 128, Imaging.PixelFormat.Format32bppArgb)
+        Dim Depthm As New Bitmap(144, 144, Imaging.PixelFormat.Format32bppArgb)
         Dim f1 As Single
         Dim f2 As Single = 255 / (zh - zl)
 
-        For x As Integer = 0 To 127
-            For y As Integer = 0 To 127
+        For x As Integer = 0 To 143
+            For y As Integer = 0 To 143
                 f1 = (dm(x, y) - zl) * f2
                 Depthm.SetPixel(x, y, Color.FromArgb(255, f1, f1, f1))
             Next

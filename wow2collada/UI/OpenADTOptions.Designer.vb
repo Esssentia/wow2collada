@@ -325,7 +325,7 @@ Partial Class OpenADTOptions
         'DumpADTToolStripMenuItem
         '
         Me.DumpADTToolStripMenuItem.Name = "DumpADTToolStripMenuItem"
-        Me.DumpADTToolStripMenuItem.Size = New System.Drawing.Size(152, 22)
+        Me.DumpADTToolStripMenuItem.Size = New System.Drawing.Size(145, 22)
         Me.DumpADTToolStripMenuItem.Text = "Dump ADT ..."
         '
         'SaveADTDialog

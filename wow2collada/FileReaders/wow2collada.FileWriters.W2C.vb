@@ -6,7 +6,7 @@ Namespace FileWriters
 
     Public Class W2C
 
-        Public Function Save(ByVal Filename As String, ByRef Models As List(Of sModel)) As Boolean
+        Public Function Save(ByVal Filename As String, ByRef ModelMgr As ModelManager) As Boolean
             'Save everything as W2C (wow2collada intermediate format for blender import)
             Dim W2CFile As String
             Dim BasePath As String
@@ -37,39 +37,39 @@ Namespace FileWriters
 
 
             'materials
-            For h As Integer = 0 To Models.Count - 1
-                For i As Integer = 0 To Models(h).Textures.Count - 1
-                    With Models(h).Textures.ElementAt(i)
-                        Dim TEXFile As String = myHF.StringToPureAscii(myHF.GetBaseName(.Key))
-                        If Not TextureList.ContainsKey(TEXFile) Then
-                            .Value.TextureMap.Save(BasePath & "\" & TEXFile & ".png")
-                            MatIdx += 1
-                            TextureList.Add(TEXFile, MatIdx)
-                            Lines.Add(String.Format("mat {0} {1}", MatIdx, BasePath & "\" & TEXFile & ".png"))
-                        End If
+            'For h As Integer = 0 To Models.Count - 1
+            '    For i As Integer = 0 To Models(h).Textures.Count - 1
+            '        With Models(h).Textures.ElementAt(i)
+            '            Dim TEXFile As String = myHF.StringToPureAscii(myHF.GetBaseName(.Key))
+            '            If Not TextureList.ContainsKey(TEXFile) Then
+            '                .Value.TextureMap.Save(BasePath & "\" & TEXFile & ".png")
+            '                MatIdx += 1
+            '                TextureList.Add(TEXFile, MatIdx)
+            '                Lines.Add(String.Format("mat {0} {1}", MatIdx, BasePath & "\" & TEXFile & ".png"))
+            '            End If
 
-                    End With
-                Next
-            Next
+            '        End With
+            '    Next
+            'Next
 
-            'submeshes:
-            For h As Integer = 0 To Models.Count - 1
-                With Models(h)
-                    For i As Integer = 0 To Models(h).Meshes.Count - 1
-                        MesIdx += 1
-                        Dim MatID As Integer = TextureList(myHF.StringToPureAscii(myHF.GetBaseName(.Meshes(i).TextureList(0).TextureID)))
-                        Dim B1 As Integer = .Meshes(i).TextureList(0).Blending1
-                        Dim B2 As Integer = .Meshes(i).TextureList(0).Blending2
-                        Lines.Add(String.Format("mesh {0} {1} {2} {3}", MesIdx, MatID, B1, B2))
-                        For Each triangle As sTriangle In .Meshes(i).TriangleList
-                            Lines.Add(String.Format("t {0:f6} {1:f6} {2:f6} {3:f6} {4:f6} {5:f6} {6:f6} {7:f6} {8:f6} {9:f6} {10:f6} {11:f6} {12:f6} {13:f6} {14:f6} {15:f6} {16:f6} {17:f6} {18:f6} {19:f6} {20:f6} {21:f6} {22:f6} {23:f6}", _
-                                .Vertices(triangle.V1).Position.X, .Vertices(triangle.V1).Position.Y, .Vertices(triangle.V1).Position.Z, .Vertices(triangle.V1).Normal.X, .Vertices(triangle.V1).Normal.Y, .Vertices(triangle.V1).Normal.Z, .Vertices(triangle.V1).TextureCoords.U, .Vertices(triangle.V1).TextureCoords.V, _
-                                .Vertices(triangle.V2).Position.X, .Vertices(triangle.V2).Position.Y, .Vertices(triangle.V2).Position.Z, .Vertices(triangle.V2).Normal.X, .Vertices(triangle.V2).Normal.Y, .Vertices(triangle.V2).Normal.Z, .Vertices(triangle.V2).TextureCoords.U, .Vertices(triangle.V2).TextureCoords.V, _
-                                .Vertices(triangle.V3).Position.X, .Vertices(triangle.V3).Position.Y, .Vertices(triangle.V3).Position.Z, .Vertices(triangle.V3).Normal.X, .Vertices(triangle.V3).Normal.Y, .Vertices(triangle.V3).Normal.Z, .Vertices(triangle.V3).TextureCoords.U, .Vertices(triangle.V3).TextureCoords.V))
-                        Next
-                    Next
-                End With
-            Next
+            ''submeshes:
+            'For h As Integer = 0 To Models.Count - 1
+            '    With Models(h)
+            '        For i As Integer = 0 To Models(h).Meshes.Count - 1
+            '            MesIdx += 1
+            '            Dim MatID As Integer = TextureList(myHF.StringToPureAscii(myHF.GetBaseName(.Meshes(i).TextureList(0).TextureID)))
+            '            Dim B1 As Integer = .Meshes(i).TextureList(0).Blending1
+            '            Dim B2 As Integer = .Meshes(i).TextureList(0).Blending2
+            '            Lines.Add(String.Format("mesh {0} {1} {2} {3}", MesIdx, MatID, B1, B2))
+            '            For Each triangle As sTriangle In .Meshes(i).TriangleList
+            '                Lines.Add(String.Format("t {0:f6} {1:f6} {2:f6} {3:f6} {4:f6} {5:f6} {6:f6} {7:f6} {8:f6} {9:f6} {10:f6} {11:f6} {12:f6} {13:f6} {14:f6} {15:f6} {16:f6} {17:f6} {18:f6} {19:f6} {20:f6} {21:f6} {22:f6} {23:f6}", _
+            '                    .Vertices(triangle.V1).Position.X, .Vertices(triangle.V1).Position.Y, .Vertices(triangle.V1).Position.Z, .Vertices(triangle.V1).Normal.X, .Vertices(triangle.V1).Normal.Y, .Vertices(triangle.V1).Normal.Z, .Vertices(triangle.V1).TextureCoords.U, .Vertices(triangle.V1).TextureCoords.V, _
+            '                    .Vertices(triangle.V2).Position.X, .Vertices(triangle.V2).Position.Y, .Vertices(triangle.V2).Position.Z, .Vertices(triangle.V2).Normal.X, .Vertices(triangle.V2).Normal.Y, .Vertices(triangle.V2).Normal.Z, .Vertices(triangle.V2).TextureCoords.U, .Vertices(triangle.V2).TextureCoords.V, _
+            '                    .Vertices(triangle.V3).Position.X, .Vertices(triangle.V3).Position.Y, .Vertices(triangle.V3).Position.Z, .Vertices(triangle.V3).Normal.X, .Vertices(triangle.V3).Normal.Y, .Vertices(triangle.V3).Normal.Z, .Vertices(triangle.V3).TextureCoords.U, .Vertices(triangle.V3).TextureCoords.V))
+            '            Next
+            '        Next
+            '    End With
+            'Next
 
             File.WriteAllLines(W2CFile, Lines.ToArray)
 
