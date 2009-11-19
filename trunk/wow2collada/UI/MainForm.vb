@@ -201,4 +201,9 @@ Public Class MainForm
         reg.ShowDialog()
     End Sub
 
+    Private Sub ContinentHeightmapDumperToolStripMenuItem_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles ContinentHeightmapDumperToolStripMenuItem.Click
+        Dim adm As New ADTDepthMaps
+        adm.ShowDialog()
+    End Sub
+
 End Class
