@@ -85,7 +85,7 @@ Namespace FileReaders
             Return Load(File.OpenRead(FileName))
         End Function
 
-        Public Function Load(ByVal File As Stream) As Boolean
+        Public Function Load(ByVal File As Stream, Optional ByVal HeightOnly As Boolean = False) As Boolean
             Dim br As New BinaryReader(File)
 
             Dim ChunkId As String
@@ -105,43 +105,47 @@ Namespace FileReaders
                         Version = br.ReadUInt32
                     Case "MCIN" 'No need for now
                     Case "MTEX" 'Texture files
-                        TextureFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
+                        If Not HeightOnly Then TextureFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
 
                     Case "MMDX" 'Model files
-                        ModelFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
+                        If Not HeightOnly Then ModelFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
 
                     Case "MMID" 'MMDX indices (ignore)
                     Case "MWMO" 'WMO files
-                        WMOFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
+                        If Not HeightOnly Then WMOFiles = myHF.GetAllZeroDelimitedStrings(br.ReadBytes(ChunkLen))
 
                     Case "MWID" 'MWMO indices (ignore)
                     Case "MDDF" 'M2 Placements
-                        ReDim M2Placements(ChunkLen / 36 - 1)
-                        For i As Integer = 0 To ChunkLen / 36 - 1
-                            M2Placements(i).MMDX_ID = br.ReadUInt32
-                            M2Placements(i).ID = br.ReadUInt32
-                            M2Placements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            M2Placements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            M2Placements(i).Scale = br.ReadUInt16 / 1024.0F
-                            Dim Unknown As UInt16 = br.ReadUInt16
-                        Next
+                        If Not HeightOnly Then
+                            ReDim M2Placements(ChunkLen / 36 - 1)
+                            For i As Integer = 0 To ChunkLen / 36 - 1
+                                M2Placements(i).MMDX_ID = br.ReadUInt32
+                                M2Placements(i).ID = br.ReadUInt32
+                                M2Placements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                M2Placements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                M2Placements(i).Scale = br.ReadUInt16 / 1024.0F
+                                Dim Unknown As UInt16 = br.ReadUInt16
+                            Next
+                        End If
 
                     Case "MODF" 'WMO placements
-                        ReDim WMOPlacements(ChunkLen / 64 - 1)
-                        For i As Integer = 0 To ChunkLen / 64 - 1
-                            WMOPlacements(i).MWMO_ID = br.ReadUInt32
-                            WMOPlacements(i).ID = br.ReadUInt32
-                            WMOPlacements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).UpperExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            WMOPlacements(i).LowerExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
-                            Dim Unknown As UInt16 = br.ReadUInt16
-                            WMOPlacements(i).DoodadSetIndex = br.ReadUInt16
-                            WMOPlacements(i).NameSetIndex = br.ReadUInt32
-                        Next
+                        If Not HeightOnly Then
+                            ReDim WMOPlacements(ChunkLen / 64 - 1)
+                            For i As Integer = 0 To ChunkLen / 64 - 1
+                                WMOPlacements(i).MWMO_ID = br.ReadUInt32
+                                WMOPlacements(i).ID = br.ReadUInt32
+                                WMOPlacements(i).Position = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                WMOPlacements(i).Orientation = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                WMOPlacements(i).UpperExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                WMOPlacements(i).LowerExtents = New sVector3(br.ReadSingle, br.ReadSingle, br.ReadSingle)
+                                Dim Unknown As UInt16 = br.ReadUInt16
+                                WMOPlacements(i).DoodadSetIndex = br.ReadUInt16
+                                WMOPlacements(i).NameSetIndex = br.ReadUInt32
+                            Next
+                        End If
 
                     Case "MCNK"
-                        LoadMCNK(br)
+                        LoadMCNK(br, HeightOnly)
 
 
                     Case "MH2O" 'Water and such...
@@ -159,7 +163,7 @@ Namespace FileReaders
             Return True
         End Function
 
-        Private Sub LoadMCNK(ByRef br As BinaryReader)
+        Private Sub LoadMCNK(ByRef br As BinaryReader, ByVal HeightOnly As Boolean)
             Dim FilePosition As Integer = br.BaseStream.Position - 8
             Dim Flags As UInt32 = br.ReadUInt32
             Dim IndexX As UInt32 = br.ReadUInt32
@@ -214,87 +218,89 @@ Namespace FileReaders
                 .HeightMap8x8 = GetHeightMap8x8FromHeightMap(.HeightMap)
                 .HeightMap9x9 = GetHeightMap9x9FromHeightMap(.HeightMap)
 
-                'MCNR subchunk
-                br.BaseStream.Position = FilePosition + .offsNormal
-                SubChunkId = br.ReadChars(4)
-                SubChunkId = myHF.StrRev(SubChunkId)
-                SubChunkLen = br.ReadUInt32
-                If SubChunkId <> "MCNR" Then Debug.Print("Argh...: Expected MCNR subchunk, got: " & SubChunkId)
-                If SubChunkLen <> (145 * 3) Then Debug.Print("Argh...: Expected MCNR subchunk of length " & (145 * 3) & ", got: " & SubChunkLen)
-                ReDim .NormalMap(144)
+                If Not HeightOnly Then
+                    'MCNR subchunk
+                    br.BaseStream.Position = FilePosition + .offsNormal
+                    SubChunkId = br.ReadChars(4)
+                    SubChunkId = myHF.StrRev(SubChunkId)
+                    SubChunkLen = br.ReadUInt32
+                    If SubChunkId <> "MCNR" Then Debug.Print("Argh...: Expected MCNR subchunk, got: " & SubChunkId)
+                    If SubChunkLen <> (145 * 3) Then Debug.Print("Argh...: Expected MCNR subchunk of length " & (145 * 3) & ", got: " & SubChunkLen)
+                    ReDim .NormalMap(144)
 
-                For i As Integer = 0 To 144
-                    .NormalMap(i) = New sVector3(br.ReadSByte / 127, br.ReadSByte / 127, br.ReadSByte / 127)
-                Next
+                    For i As Integer = 0 To 144
+                        .NormalMap(i) = New sVector3(br.ReadSByte / 127, br.ReadSByte / 127, br.ReadSByte / 127)
+                    Next
 
-                'MCLY subchunk
-                br.BaseStream.Position = FilePosition + .offsLayer
-                SubChunkId = br.ReadChars(4)
-                SubChunkId = myHF.StrRev(SubChunkId)
-                SubChunkLen = br.ReadUInt32
-                If SubChunkId <> "MCLY" Then Debug.Print("Argh...: Expected MCLY subchunk, got: " & SubChunkId)
-                If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCLY subchunk of length multiple 16, got: " & SubChunkLen)
-                ReDim .Layer(3)
+                    'MCLY subchunk
+                    br.BaseStream.Position = FilePosition + .offsLayer
+                    SubChunkId = br.ReadChars(4)
+                    SubChunkId = myHF.StrRev(SubChunkId)
+                    SubChunkLen = br.ReadUInt32
+                    If SubChunkId <> "MCLY" Then Debug.Print("Argh...: Expected MCLY subchunk, got: " & SubChunkId)
+                    If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCLY subchunk of length multiple 16, got: " & SubChunkLen)
+                    ReDim .Layer(3)
 
-                For i As Integer = 0 To SubChunkLen / 16 - 1
-                    .Layer(i).TextureID = br.ReadInt32
-                    .Layer(i).Flags = br.ReadInt32
-                    .Layer(i).AlphaOffset = br.ReadInt32
-                    .Layer(i).DetailTextureID = br.ReadInt32
-                Next
+                    For i As Integer = 0 To SubChunkLen / 16 - 1
+                        .Layer(i).TextureID = br.ReadInt32
+                        .Layer(i).Flags = br.ReadInt32
+                        .Layer(i).AlphaOffset = br.ReadInt32
+                        .Layer(i).DetailTextureID = br.ReadInt32
+                    Next
 
-                'MCAL subchunk
-                br.BaseStream.Position = FilePosition + .offsAlpha
-                SubChunkId = br.ReadChars(4)
-                SubChunkId = myHF.StrRev(SubChunkId)
-                SubChunkLen = br.ReadUInt32
-                If SubChunkId <> "MCAL" Then Debug.Print("Argh...: Expected MCAL subchunk, got: " & SubChunkId)
-                'If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCAL subchunk of length multiple 16, got: " & SubChunkLen)
-                ReDim .AlphaMaps(3)
+                    'MCAL subchunk
+                    br.BaseStream.Position = FilePosition + .offsAlpha
+                    SubChunkId = br.ReadChars(4)
+                    SubChunkId = myHF.StrRev(SubChunkId)
+                    SubChunkLen = br.ReadUInt32
+                    If SubChunkId <> "MCAL" Then Debug.Print("Argh...: Expected MCAL subchunk, got: " & SubChunkId)
+                    'If SubChunkLen Mod 16 <> 0 Then Debug.Print("Argh...: Expected MCAL subchunk of length multiple 16, got: " & SubChunkLen)
+                    ReDim .AlphaMaps(3)
 
-                .preWotLK = (SubChunkLen Mod 2048 = 0) And SubChunkLen > 0
+                    .preWotLK = (SubChunkLen Mod 2048 = 0) And SubChunkLen > 0
 
-                For i As Integer = 0 To 3
-                    'If .Layer(i).TextureID > 0 Then
-                    If .Layer(i).Flags And &H100 Then 'use alpha map
-                        If .Layer(i).Flags And &H200 Then 'compressed alpha
-                            Dim Buffer(4095) As Byte
-                            Dim offO As Integer = 0
-                            While offO < 4096
-                                Dim b1 As Byte = br.ReadByte
-                                Dim b2 As Byte = br.ReadByte
-                                Dim count As Integer = b1 And &H7F
-                                Dim fill As Boolean = b1 And &H80
-
-                                'Debug.Print(br.BaseStream.Position.ToString("0000000") & " " & offO.ToString("0000") & " " & count.ToString("000") & " " & fill)
-
-                                For k As Integer = 0 To count - 1
-                                    If offO < 4096 Then
-                                        Buffer(offO) = b2
-                                        offO += 1
-                                    Else
-                                        Debug.Print(String.Format("Compressed Alpha Weirdness: Bufferpos {0} / Bufferval {1}", offO, b2))
-                                        k = count
-                                    End If
-                                    If Not fill And k < (count - 1) Then b2 = br.ReadByte
-                                Next
-
-                            End While
-                            .AlphaMaps(i) = BytesToAlphaBitmap4096(Buffer)
-                        Else 'uncompressed alpha
-                            If .preWotLK Then
-                                Dim Buffer(2047) As Byte
-                                Buffer = br.ReadBytes(2048)
-                                .AlphaMaps(i) = BytesToAlphaBitmap2048(Buffer)
-                            Else
+                    For i As Integer = 0 To 3
+                        'If .Layer(i).TextureID > 0 Then
+                        If .Layer(i).Flags And &H100 Then 'use alpha map
+                            If .Layer(i).Flags And &H200 Then 'compressed alpha
                                 Dim Buffer(4095) As Byte
-                                Buffer = br.ReadBytes(4096)
+                                Dim offO As Integer = 0
+                                While offO < 4096
+                                    Dim b1 As Byte = br.ReadByte
+                                    Dim b2 As Byte = br.ReadByte
+                                    Dim count As Integer = b1 And &H7F
+                                    Dim fill As Boolean = b1 And &H80
+
+                                    'Debug.Print(br.BaseStream.Position.ToString("0000000") & " " & offO.ToString("0000") & " " & count.ToString("000") & " " & fill)
+
+                                    For k As Integer = 0 To count - 1
+                                        If offO < 4096 Then
+                                            Buffer(offO) = b2
+                                            offO += 1
+                                        Else
+                                            Debug.Print(String.Format("Compressed Alpha Weirdness: Bufferpos {0} / Bufferval {1}", offO, b2))
+                                            k = count
+                                        End If
+                                        If Not fill And k < (count - 1) Then b2 = br.ReadByte
+                                    Next
+
+                                End While
                                 .AlphaMaps(i) = BytesToAlphaBitmap4096(Buffer)
+                            Else 'uncompressed alpha
+                                If .preWotLK Then
+                                    Dim Buffer(2047) As Byte
+                                    Buffer = br.ReadBytes(2048)
+                                    .AlphaMaps(i) = BytesToAlphaBitmap2048(Buffer)
+                                Else
+                                    Dim Buffer(4095) As Byte
+                                    Buffer = br.ReadBytes(4096)
+                                    .AlphaMaps(i) = BytesToAlphaBitmap4096(Buffer)
+                                End If
                             End If
                         End If
-                    End If
-                    'End If
-                Next
+                        'End If
+                    Next
+                End If
 
             End With
         End Sub
